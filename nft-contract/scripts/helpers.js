@@ -15,9 +15,7 @@ function getEnvVariable(key, defaultValue) {
 
 // Helper method for fetching a connection provider to the Ethereum network
 function getProvider() {
-    return ethers.getDefaultProvider(getEnvVariable("NETWORK", "ropsten"), {
-        infura: getEnvVariable("INFURA_KEY"),
-    });
+    return new ethers.providers.Web3Provider(network.provider);
 }
 
 // Helper method for fetching a wallet account using an environment variable for the PK
@@ -26,9 +24,9 @@ function getAccount() {
 }
 
 // Helper method for fetching a contract instance at a given address
-function getContract(contractName, hre) {
+function getContract(contractAddress,contractName, hre) {
     const account = getAccount();
-    return getContractAt(hre, contractName, getEnvVariable("NFT_CONTRACT_ADDRESS"), account);
+    return getContractAt(hre, contractName, contractAddress, account);
 }
 
 module.exports = {

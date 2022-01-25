@@ -7,8 +7,14 @@ task("check-balance", "Prints out the balance of your account").setAction(async 
     console.log(`Account balance for ${account.address}: ${await account.getBalance()}`);
 });
 
-task("deploy", "Deploys the NFT.sol contract").setAction(async function (taskArguments, hre) {
+task("deploy-nft", "Deploys the NFT.sol contract").setAction(async function (taskArguments, hre) {
     const nftContractFactory = await hre.ethers.getContractFactory("NFT", getAccount());
+    const nft = await nftContractFactory.deploy();
+    console.log(`Contract deployed to address: ${nft.address}`);
+});
+
+task("deploy-sales", "Deploys the Sales.sol contract").setAction(async function (taskArguments, hre) {
+    const nftContractFactory = await hre.ethers.getContractFactory("Sales", getAccount());
     const nft = await nftContractFactory.deploy();
     console.log(`Contract deployed to address: ${nft.address}`);
 });
