@@ -25,4 +25,14 @@ contract NFT is ERC721, Ownable {
     function current() public view returns (uint256) {
         return currentTokenId.current();
     }
+
+    /// @dev Returns an URI for a given token ID
+    function _baseURI() internal view virtual override returns (string memory) {
+        return baseTokenURI;
+    }
+
+    /// @dev Sets the base token URI prefix.
+    function setBaseTokenURI(string memory _baseTokenURI) public {
+        baseTokenURI = _baseTokenURI;
+    }
 }

@@ -58,8 +58,8 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
         returns (uint256)
     {
         currentTokenId.increment();
-        uint256 tokenId = currentTokenId.current();
-        require(tokenId <= TOTAL_SUPPLY, "Max supply reached");
+        uint256 newItemId = currentTokenId.current();
+        require(newItemId <= TOTAL_SUPPLY, "Max supply reached");
         require(
             msg.value >= price,
             "Transaction value did not greater than the mint price"
@@ -71,8 +71,9 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
         );
         require(success, "Mining failed");
         quotas[msg.sender] = left.sub(1);
+        total.sub(1);
         _asyncTransfer(owner(), msg.value);
-        return tokenId;
+        return newItemId;
     }
 
     function setLimit(address _account, uint _limit)
