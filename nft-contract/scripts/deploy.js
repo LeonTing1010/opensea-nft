@@ -13,8 +13,8 @@ task("deploy-nft", "Deploys the NFT.sol contract").setAction(async function (tas
     console.log(`Contract deployed to address: ${nft.address}`);
 });
 
-task("deploy-sales", "Deploys the Sales.sol contract").setAction(async function (taskArguments, hre) {
-    const nftContractFactory = await hre.ethers.getContractFactory("Sales", getAccount());
+task("deploy-crowdsale", "Deploys the Crowdsale.sol contract").setAction(async function (taskArguments, hre) {
+    const nftContractFactory = await hre.ethers.getContractFactory("Crowdsale", getAccount());
     const nft = await nftContractFactory.deploy();
     console.log(`Contract deployed to address: ${nft.address}`);
 });
