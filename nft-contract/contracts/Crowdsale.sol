@@ -10,11 +10,11 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 contract Crowdsale is PullPayment, Ownable, AccessControl {
     using SafeMath for uint256;
     // Create a new role identifier for the minter role
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant MINER_ROLE = keccak256("MINER_ROLE");
 
-    uint256 public constant TOTAL_SUPPLY = 10_000;
     uint256 public constant MINT_PRICE = 0.01 ether;
 
+    address public collector; //
     address public nftAddress;
     uint256 public price;
 
@@ -22,7 +22,7 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
     uint256 public closingTime; // crowdsale closing time
 
     using Counters for Counters.Counter;
-    Counters.Counter private currentTokenId;
+    Counters.Counter private counter;
 
     mapping(address => uint256) quotas;
     uint256 public total = 0;
@@ -47,44 +47,47 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
     constructor() {
         // Grant the contract deployer the default admin role: it will be able to grant and revoke any roles
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        collector = msg.sender;
         price = MINT_PRICE;
     }
 
-    function mint()
+    function mint(uint256 _amount)
         public
         payable
-        onlyRole(MINTER_ROLE)
-        onlyWhileOpen
-        returns (uint256)
+        onlyPositive(_amount)
     {
-        currentTokenId.increment();
-        uint256 newItemId = currentTokenId.current();
-        require(newItemId <= TOTAL_SUPPLY, "Max supply reached");
+        require(block.timestamp >= openingTime, "Sales time has not started");
+        address miner = msg.sender;
+        if (block.timestamp <= closingTime) {
+            require(
+                hasRole(MINER_ROLE, miner),
+                "Please join the whitelist first"
+            );
+        }
         require(
             msg.value >= price,
             "Transaction value did not greater than the mint price"
         );
-        uint256 left = quotas[msg.sender];
-        require(left > 0, "Over the limit");
-        (bool success, ) = nftAddress.call(
-            abi.encodeWithSignature("mintTo(address)", msg.sender)
-        );
-        require(success, "Mining failed");
-        quotas[msg.sender] = left.sub(1);
-        total.sub(1);
-        _asyncTransfer(owner(), msg.value);
-        return newItemId;
+
+        uint256 left = quotas[miner];
+        require(left >= _amount, "Over the limit");
+        quotas[miner] = left.sub(_amount);
+        for (uint256 index = 0; index < _amount; index++) {
+            (bool success, ) = nftAddress.call(
+                abi.encodeWithSignature("mintTo(address)", miner)
+            );
+            if (!success) break;
+        }
+        _asyncTransfer(collector, msg.value);
     }
 
-    function setLimit(address _account, uint _limit)
+    function setLimit(address _account, uint256 _limit)
         public
         onlyOwner
         onlyPositive(_limit)
     {
-        total = total.add(_limit);
-        require(total <= TOTAL_SUPPLY, "Max supply reached");
         quotas[_account] = _limit;
-        super.grantRole(MINTER_ROLE, _account);
+        super.grantRole(MINER_ROLE, _account);
     }
 
     function limit(address _account) public view returns (uint256) {
@@ -110,15 +113,19 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
         super.withdrawPayments(_payee);
     }
 
-    function setNftAddress(address _nftAddress) external {
+    function setNftAddress(address _nftAddress) external onlyOwner {
         nftAddress = _nftAddress;
     }
 
-    function setOpeningTime(uint256 _openingTime) external {
+    function setOpeningTime(uint256 _openingTime) external onlyOwner {
         openingTime = _openingTime;
     }
 
-    function setClosingTime(uint256 _closingTime) external {
+    function setClosingTime(uint256 _closingTime) external onlyOwner {
         closingTime = _closingTime;
+    }
+
+    function setCollector(address _collector) external onlyOwner {
+        collector = _collector;
     }
 }

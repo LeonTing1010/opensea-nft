@@ -25,6 +25,11 @@ module.exports = {
       url: `https://polygon-mumbai.infura.io/v3/${INFURA_KEY}`,
       accounts: [`0x${ACCOUNT_PRIVATE_KEY}`]
     },
+    rinkeby: {
+      url: ` https://rinkeby.infura.io/v3/${INFURA_KEY}`,
+      accounts: [`0x${ACCOUNT_PRIVATE_KEY}`]
+    },
+   
   },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,

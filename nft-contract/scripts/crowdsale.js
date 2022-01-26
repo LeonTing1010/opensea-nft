@@ -32,11 +32,21 @@ task("closing", "Set ClosingTime for the Sales contract")
         });
         console.log(`Transaction Hash: ${transactionResponse.hash}`);
     });
-
-task("mint", "Sales the NFT")
+task("collect", "Set fee collector")
+    .addParam("collector", "Collector")
     .setAction(async function (taskArguments, hre) {
         const contract = await getContract(getEnvVariable("SALES_CONTRACT_ADDRESS"), contractName, hre);
-        const transactionResponse = await contract.mint({
+        const transactionResponse = await contract.setClosingTime(taskArguments.collector, {
+            gasLimit: 500_000,
+        });
+        console.log(`Transaction Hash: ${transactionResponse.hash}`);
+    });    
+
+task("mint", "Sales the NFT")
+    .addParam("amount", "Mining quantity")
+    .setAction(async function (taskArguments, hre) {
+        const contract = await getContract(getEnvVariable("SALES_CONTRACT_ADDRESS"), contractName, hre);
+        const transactionResponse = await contract.mint(taskArguments.amount, {
             gasLimit: 500_000,
             value: ethers.utils.parseEther("0.01"),
         });

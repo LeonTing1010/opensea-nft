@@ -10,12 +10,19 @@ contract NFT is ERC721, Ownable {
     Counters.Counter private currentTokenId;
     /// @dev Base token URI used as a prefix by tokenURI().
     string public baseTokenURI;
+    uint256 public constant TOTAL_SUPPLY = 10_000;
 
-    constructor() ERC721("NFT Star", "NFT") {
+    constructor() ERC721("NFTSTAR", "NSTAR") {
         baseTokenURI = "";
     }
 
+    function totalSupply() external pure returns (uint256) {
+        return TOTAL_SUPPLY;
+    }
+
     function mintTo(address recipient) public returns (uint256) {
+        uint256 tokenId = currentTokenId.current();
+        require(tokenId < TOTAL_SUPPLY, "Max supply reached");
         currentTokenId.increment();
         uint256 newItemId = currentTokenId.current();
         _safeMint(recipient, newItemId);
