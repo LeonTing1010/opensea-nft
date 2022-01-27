@@ -4,8 +4,10 @@ pragma solidity ^0.8.7;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./ContextMixin.sol";
+import "./NativeMetaTransaction.sol";
 
-contract NFT is ERC721, Ownable {
+contract NFT is ERC721, Ownable, ContextMixin, NativeMetaTransaction {
     using Counters for Counters.Counter;
     Counters.Counter private currentTokenId;
     /// @dev Base token URI used as a prefix by tokenURI().
@@ -13,6 +15,7 @@ contract NFT is ERC721, Ownable {
     uint256 public constant TOTAL_SUPPLY = 10_000;
 
     constructor() ERC721("NFTSTAR", "NSTAR") {
+        _initializeEIP712("NFTSTAR");
         baseTokenURI = "";
     }
 
@@ -41,5 +44,28 @@ contract NFT is ERC721, Ownable {
     /// @dev Sets the base token URI prefix.
     function setBaseTokenURI(string memory _baseTokenURI) public {
         baseTokenURI = _baseTokenURI;
+    }
+
+    /**
+     * This is used instead of msg.sender as transactions won't be sent by the original token owner, but by OpenSea.
+     */
+    function _msgSender() internal view override returns (address sender) {
+        return ContextMixin.msgSender();
+    }
+
+    /**
+     * As another option for supporting trading without requiring meta transactions, override isApprovedForAll to whitelist OpenSea proxy accounts on Matic
+     */
+    function isApprovedForAll(address _owner, address _operator)
+        public
+        view
+        override
+        returns (bool isOperator)
+    {
+        if (_operator == address(0x58807baD0B376efc12F5AD86aAc70E78ed67deaE)) {
+            return true;
+        }
+
+        return ERC721.isApprovedForAll(_owner, _operator);
     }
 }
