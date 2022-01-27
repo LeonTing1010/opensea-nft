@@ -4,10 +4,19 @@ pragma solidity ^0.8.7;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./ContextMixin.sol";
 import "./NativeMetaTransaction.sol";
 
-contract NFT is ERC721, Ownable, ContextMixin, NativeMetaTransaction {
+contract NFT is
+    ERC721,
+    Ownable,
+    AccessControl,
+    ContextMixin,
+    NativeMetaTransaction
+{
+    // Create a new role identifier for the minter role
+    bytes32 public constant MINER_ROLE = keccak256("MINER_ROLE");
     using Counters for Counters.Counter;
     Counters.Counter private currentTokenId;
     /// @dev Base token URI used as a prefix by tokenURI().
@@ -17,13 +26,19 @@ contract NFT is ERC721, Ownable, ContextMixin, NativeMetaTransaction {
     constructor() ERC721("NFTSTAR", "NSTAR") {
         _initializeEIP712("NFTSTAR");
         baseTokenURI = "";
+        // Grant the contract deployer the default admin role: it will be able to grant and revoke any roles
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     function totalSupply() external pure returns (uint256) {
         return TOTAL_SUPPLY;
     }
 
-    function mintTo(address recipient) public returns (uint256) {
+    function mintTo(address recipient)
+        public
+        onlyRole(MINER_ROLE)
+        returns (uint256)
+    {
         uint256 tokenId = currentTokenId.current();
         require(tokenId < TOTAL_SUPPLY, "Max supply reached");
         currentTokenId.increment();
@@ -42,7 +57,7 @@ contract NFT is ERC721, Ownable, ContextMixin, NativeMetaTransaction {
     }
 
     /// @dev Sets the base token URI prefix.
-    function setBaseTokenURI(string memory _baseTokenURI) public {
+    function setBaseTokenURI(string memory _baseTokenURI)  onlyRole(MINER_ROLE) public {
         baseTokenURI = _baseTokenURI;
     }
 
@@ -67,5 +82,18 @@ contract NFT is ERC721, Ownable, ContextMixin, NativeMetaTransaction {
         }
 
         return ERC721.isApprovedForAll(_owner, _operator);
+    }
+
+    /**
+     * @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(AccessControl, ERC721)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
     }
 }

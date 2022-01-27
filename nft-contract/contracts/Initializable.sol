@@ -1,4 +1,4 @@
-//SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 /**
  * https://github.com/maticnetwork/pos-portal/blob/master/contracts/common/Initializable.sol

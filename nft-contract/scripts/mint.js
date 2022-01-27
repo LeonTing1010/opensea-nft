@@ -12,6 +12,16 @@ task("mintTo", "Mints from the NFT contract")
         });
         console.log(`Transaction Hash: ${transactionResponse.hash}`);
     });
+task("miner", "Add miner ROLE")
+    .addParam("address", "The new miner")
+    .setAction(async function (taskArguments, hre) {
+        const contract = await getContract(getEnvVariable("NFT_CONTRACT_ADDRESS"), contractName, hre);
+        const transactionResponse = await 
+        contract.grantRole("0xa952726ef2588ad078edf35b066f7c7406e207cb0003bbaba8cb53eba9553e72",taskArguments.address, {
+            gasLimit: 500_000,
+        });
+        console.log(`Transaction Hash: ${transactionResponse.hash}`);
+    });
 
 
 task("set-base-token-uri", "Sets the base token URI for the deployed smart contract")

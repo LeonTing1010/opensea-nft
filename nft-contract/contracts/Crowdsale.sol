@@ -25,18 +25,6 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
     Counters.Counter private counter;
 
     mapping(address => uint256) quotas;
-    uint256 public total = 0;
-
-    /**
-     * @dev Reverts if not in crowdsale time range.
-     */
-    modifier onlyWhileOpen() {
-        // solium-disable-next-line security/no-block-members
-        require(
-            block.timestamp >= openingTime && block.timestamp <= closingTime
-        );
-        _;
-    }
 
     modifier onlyPositive(uint256 _price) {
         if (_price > 0) {
@@ -51,11 +39,7 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
         price = MINT_PRICE;
     }
 
-    function mint(uint256 _amount)
-        public
-        payable
-        onlyPositive(_amount)
-    {
+    function mint(uint256 _amount) public payable onlyPositive(_amount) {
         require(block.timestamp >= openingTime, "Sales time has not started");
         address miner = msg.sender;
         if (block.timestamp <= closingTime) {
