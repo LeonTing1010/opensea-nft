@@ -7,8 +7,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./ContextMixin.sol";
 import "./NativeMetaTransaction.sol";
+import "./INFT.sol";
 
 contract NFT is
+    INFT,
     ERC721,
     Ownable,
     AccessControl,
@@ -36,6 +38,7 @@ contract NFT is
 
     function mintTo(address recipient)
         public
+        override
         onlyRole(MINER_ROLE)
         returns (uint256)
     {
@@ -57,7 +60,10 @@ contract NFT is
     }
 
     /// @dev Sets the base token URI prefix.
-    function setBaseTokenURI(string memory _baseTokenURI)  onlyRole(MINER_ROLE) public {
+    function setBaseTokenURI(string memory _baseTokenURI)
+        public
+        onlyRole(MINER_ROLE)
+    {
         baseTokenURI = _baseTokenURI;
     }
 

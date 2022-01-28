@@ -6,23 +6,17 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "./INFT.sol";
 
 contract Crowdsale is PullPayment, Ownable, AccessControl {
     using SafeMath for uint256;
     // Create a new role identifier for the minter role
     bytes32 public constant MINER_ROLE = keccak256("MINER_ROLE");
-
-    uint256 public constant MINT_PRICE = 0.01 ether;
-
     address public collector; //
-    address public nftAddress;
+    address public nft;
+    uint32 public openingTime; // crowdsale opening time
+    uint32 public closingTime; // crowdsale closing time
     uint256 public price;
-
-    uint256 public openingTime; // crowdsale opening time
-    uint256 public closingTime; // crowdsale closing time
-
-    using Counters for Counters.Counter;
-    Counters.Counter private counter;
 
     mapping(address => uint256) quotas;
 
@@ -36,7 +30,7 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
         // Grant the contract deployer the default admin role: it will be able to grant and revoke any roles
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         collector = msg.sender;
-        price = MINT_PRICE;
+        price = 0.01 ether;
     }
 
     function mint(uint256 _amount) public payable onlyPositive(_amount) {
@@ -49,20 +43,17 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
             );
         }
         require(
-            msg.value >= price,
-            "Transaction value did not greater than the mint price"
+            msg.value == price,
+            "Transaction value is not equal to mint price"
         );
-
         uint256 left = quotas[miner];
         require(left >= _amount, "Over the limit");
         quotas[miner] = left.sub(_amount);
-        for (uint256 index = 0; index < _amount; index++) {
-            (bool success, ) = nftAddress.call(
-                abi.encodeWithSignature("mintTo(address)", miner)
-            );
-            if (!success) break;
-        }
         _asyncTransfer(collector, msg.value);
+
+        for (uint256 index = 0; index < _amount; index++) {
+            INFT(nft).mintTo(miner);
+        }
     }
 
     function setLimit(address _account, uint256 _limit)
@@ -72,6 +63,21 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
     {
         quotas[_account] = _limit;
         super.grantRole(MINER_ROLE, _account);
+    }
+
+    function grantLimits(address[] memory _accounts, uint256[] memory _limits)
+        external
+        onlyOwner
+    {
+        require(
+            _accounts.length == _limits.length,
+            "_accounts does not match _limits length"
+        );
+        for (uint256 index = 0; index < _accounts.length; index++) {
+            address account = _accounts[index];
+            quotas[account] = _limits[index];
+            super.grantRole(MINER_ROLE, account);
+        }
     }
 
     function limit(address _account) public view returns (uint256) {
@@ -97,15 +103,15 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
         super.withdrawPayments(_payee);
     }
 
-    function setNftAddress(address _nftAddress) external onlyOwner {
-        nftAddress = _nftAddress;
+    function setNft(address _nft) external onlyOwner {
+        nft = _nft;
     }
 
-    function setOpeningTime(uint256 _openingTime) external onlyOwner {
+    function setOpeningTime(uint32 _openingTime) external onlyOwner {
         openingTime = _openingTime;
     }
 
-    function setClosingTime(uint256 _closingTime) external onlyOwner {
+    function setClosingTime(uint32 _closingTime) external onlyOwner {
         closingTime = _closingTime;
     }
 
