@@ -16,12 +16,13 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
     address public nft;
     uint32 public openingTime; // crowdsale opening time
     uint32 public closingTime; // crowdsale closing time
+    uint32 public amount;
     uint256 public price;
 
     mapping(address => uint256) quotas;
 
-    modifier onlyPositive(uint256 _price) {
-        if (_price > 0) {
+    modifier onlyPositive(uint256 _number) {
+        if (_number > 0) {
             _;
         }
     }
@@ -30,25 +31,29 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
         // Grant the contract deployer the default admin role: it will be able to grant and revoke any roles
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         collector = msg.sender;
+        amount = 5;
         price = 0.01 ether;
+
     }
 
     function mint(uint256 _amount) public payable onlyPositive(_amount) {
         require(block.timestamp >= openingTime, "Sales time has not started");
+        require(
+            msg.value == _amount.mul(price),
+            "Transaction value is not equal to price*_amount"
+        );
         address miner = msg.sender;
         if (block.timestamp <= closingTime) {
             require(
                 hasRole(MINER_ROLE, miner),
                 "Please join the whitelist first"
             );
+            uint256 left = quotas[miner];
+            require(left >= _amount, "Over the limit");
+            quotas[miner] = left.sub(_amount);
+        } else {
+            require(_amount <= amount, "Maximum limit is 5");
         }
-        require(
-            msg.value == price,
-            "Transaction value is not equal to mint price"
-        );
-        uint256 left = quotas[miner];
-        require(left >= _amount, "Over the limit");
-        quotas[miner] = left.sub(_amount);
         _asyncTransfer(collector, msg.value);
 
         for (uint256 index = 0; index < _amount; index++) {
@@ -84,24 +89,26 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
         return quotas[_account];
     }
 
-    function setPrice(uint256 _price)
-        public
-        virtual
-        onlyOwner
-        onlyPositive(_price)
-    {
+    function setPrice(uint256 _price) external onlyOwner onlyPositive(_price) {
         price = _price;
     }
 
-    /// @dev Overridden in order to make it an onlyOwner function
-    function withdrawPayments(address payable _payee)
-        public
-        virtual
-        override
+    function setMaxAmount(uint32 _amount)
+        external
         onlyOwner
+        onlyPositive(_amount)
     {
-        super.withdrawPayments(_payee);
+        amount = _amount;
     }
+
+    // /// @dev Overridden in order to make it an onlyOwner function
+    // function withdrawPayments(address payable _payee)
+    //     public
+    //     virtual
+    //     override
+    // {
+    //     super.withdrawPayments(_payee);
+    // }
 
     function setNft(address _nft) external onlyOwner {
         nft = _nft;
