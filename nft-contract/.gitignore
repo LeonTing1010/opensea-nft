@@ -9,3 +9,4 @@ cache
 artifacts
 contracts/.deps/
 ../.vscode/
+.vscode/
