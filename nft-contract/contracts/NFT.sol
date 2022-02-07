@@ -23,7 +23,7 @@ contract NFT is
     Counters.Counter private currentTokenId;
     /// @dev Base token URI used as a prefix by tokenURI().
     string public baseTokenURI;
-    uint256 public constant TOTAL_SUPPLY = 10_000;
+    uint256 public constant TOTAL_SUPPLY = 7777;
 
     constructor() ERC721("NFTSTAR", "NSTAR") {
         _initializeEIP712("NFTSTAR");
