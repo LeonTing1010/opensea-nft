@@ -22,12 +22,12 @@ contract NFT is
     using Counters for Counters.Counter;
     Counters.Counter private currentTokenId;
     /// @dev Base token URI used as a prefix by tokenURI().
-    string public baseTokenURI;
+    string private baseTokenURI;
+    string private collectionURI;
     uint256 public constant TOTAL_SUPPLY = 7777;
 
     constructor() ERC721("NFTSTAR", "NSTAR") {
         _initializeEIP712("NFTSTAR");
-        baseTokenURI = "";
         // Grant the contract deployer the default admin role: it will be able to grant and revoke any roles
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
@@ -52,6 +52,17 @@ contract NFT is
 
     function current() public view returns (uint256) {
         return currentTokenId.current();
+    }
+
+    function contractURI() public view returns (string memory) {
+        return collectionURI;
+    }
+
+    function setContractURI(string memory _contractURI)
+        public
+        onlyRole(MINER_ROLE)
+    {
+        collectionURI = _contractURI;
     }
 
     /// @dev Returns an URI for a given token ID

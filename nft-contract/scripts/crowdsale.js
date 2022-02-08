@@ -54,19 +54,19 @@ task("mint", "Sales the NFT")
         });
         console.log(`Transaction Hash: ${transactionResponse.hash}`);
     });
-task("transfer", "Transfer ownership")
-    .addParam("owner", "New owner")
-    .setAction(async function (taskArguments, hre) {
-        const contract = await getContract(getEnvVariable("SALES_CONTRACT_ADDRESS"), contractName, hre);
-        await contract.transferOwnership(taskArguments.owner, {
-            gasLimit: 500_000,
-        });
-        const transactionResponse = await contract.grantRole("0x0000000000000000000000000000000000000000000000000000000000000000",
-         taskArguments.owner, {
-            gasLimit: 500_000,
-        });
-        console.log(`Transaction Hash: ${transactionResponse.hash}`);
-    });    
+// task("transfer", "Transfer ownership")
+//     .addParam("owner", "New owner")
+//     .setAction(async function (taskArguments, hre) {
+//         const contract = await getContract(getEnvVariable("SALES_CONTRACT_ADDRESS"), contractName, hre);
+//         await contract.transferOwnership(taskArguments.owner, {
+//             gasLimit: 500_000,
+//         });
+//         const transactionResponse = await contract.grantRole("0x0000000000000000000000000000000000000000000000000000000000000000",
+//          taskArguments.owner, {
+//             gasLimit: 500_000,
+//         });
+//         console.log(`Transaction Hash: ${transactionResponse.hash}`);
+//     });    
 
 task("withdraw", "Withdraw Payments from the NFT contract")
     .addParam("address", "The address to to send the funds to")
