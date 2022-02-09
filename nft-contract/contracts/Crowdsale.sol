@@ -16,24 +16,23 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
     address public nft;
     uint32 public openingTime; // crowdsale opening time
     uint32 public closingTime; // crowdsale closing time
-    uint32 public amount;
+    uint256 public max;
     uint256 public price;
 
     mapping(address => uint256) quotas;
+    mapping(address => uint256) sold;
 
     modifier onlyPositive(uint256 _number) {
-        if (_number > 0) {
-            _;
-        }
+        require(_number >0, "Must be greater than 0");
+        _;
     }
 
     constructor() {
         // Grant the contract deployer the default admin role: it will be able to grant and revoke any roles
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         collector = msg.sender;
-        amount = 5;
+        max = 5;
         price = 0.01 ether;
-
     }
 
     function mint(uint256 _amount) public payable onlyPositive(_amount) {
@@ -48,11 +47,13 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
                 hasRole(MINER_ROLE, miner),
                 "Please join the whitelist first"
             );
-            uint256 left = quotas[miner];
-            require(left >= _amount, "Over the limit");
-            quotas[miner] = left.sub(_amount);
+            sold[miner] = _amount.add(sold[miner]);
+            (bool ok, ) = quotas[miner].trySub(sold[miner]);
+            require(ok, "Over the limit");
         } else {
-            require(_amount <= amount, "Maximum limit is 5");
+            sold[miner] = _amount.add(sold[miner]);
+            (bool ok, ) = max.trySub(sold[miner]);
+            require(ok, "Exceeded maximum quantity limit");
         }
         _asyncTransfer(collector, msg.value);
 
@@ -66,6 +67,7 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
         onlyOwner
         onlyPositive(_limit)
     {
+        require(_limit <= max, "Exceeded maximum quantity limit");
         quotas[_account] = _limit;
         super.grantRole(MINER_ROLE, _account);
     }
@@ -80,13 +82,24 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
         );
         for (uint256 index = 0; index < _accounts.length; index++) {
             address account = _accounts[index];
+            require(_limits[index] <= max, "Exceeded maximum quantity limit");
             quotas[account] = _limits[index];
             super.grantRole(MINER_ROLE, account);
         }
     }
 
     function limit(address _account) public view returns (uint256) {
-        return quotas[_account];
+        uint256 result;
+        if (block.timestamp > closingTime) {
+            (, result) = max.trySub(sold[_account]);
+            return result;
+        }
+        (, result) = quotas[_account].trySub(sold[_account]);
+        return result;
+    }
+
+    function soldBy(address _account) public view returns (uint256) {
+        return sold[_account];
     }
 
     function setPrice(uint256 _price) external onlyOwner onlyPositive(_price) {
@@ -98,7 +111,7 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
         onlyOwner
         onlyPositive(_amount)
     {
-        amount = _amount;
+        max = _amount;
     }
 
     // /// @dev Overridden in order to make it an onlyOwner function

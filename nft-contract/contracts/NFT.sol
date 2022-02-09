@@ -3,7 +3,6 @@ pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./ContextMixin.sol";
 import "./NativeMetaTransaction.sol";
@@ -12,7 +11,6 @@ import "./INFT.sol";
 contract NFT is
     INFT,
     ERC721,
-    Ownable,
     AccessControl,
     ContextMixin,
     NativeMetaTransaction
