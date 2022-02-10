@@ -30,13 +30,35 @@ task("deploy", "Deploys the NFT.sol & Crowdsale.sol contract").setAction(async f
 
     const nftAddress = nft.address;
     const salesAddress = sales.address;
+
+    // const nftAddress = getEnvVariable("NFT_CONTRACT_ADDRESS");
+    // const salesAddress = getEnvVariable("SALES_CONTRACT_ADDRESS");
+
     const contractNFT = await getContract(nftAddress, "NFT", hre);
     const contractCrowdsale = await getContract(salesAddress, "Crowdsale", hre);
-    const setNft = await contractCrowdsale.setNft(nftAddress, { gasLimit: 500_000, });
+    const setNft = await contractCrowdsale.setNft(nftAddress, { gasLimit: 5_000_000, });
     console.log(`setNft Transaction Hash: ${setNft.hash}`);
     const grantRole = await contractNFT.grantRole("0xa952726ef2588ad078edf35b066f7c7406e207cb0003bbaba8cb53eba9553e72",
         salesAddress, {
-        gasLimit: 500_000,
+        gasLimit:5_000_000,
+    });
+    console.log(`grant Miner Role Transaction Hash: ${grantRole.hash}`);
+
+});
+
+
+task("init", "Init the NFT.sol & Crowdsale.sol contract").setAction(async function (taskArguments, hre) {
+
+    const nftAddress = getEnvVariable("NFT_CONTRACT_ADDRESS");
+    const salesAddress = getEnvVariable("SALES_CONTRACT_ADDRESS");
+
+    const contractNFT = await getContract(nftAddress, "NFT", hre);
+    const contractCrowdsale = await getContract(salesAddress, "Crowdsale", hre);
+    const setNft = await contractCrowdsale.setNft(nftAddress, { gasLimit: 5_000_000, });
+    console.log(`setNft Transaction Hash: ${setNft.hash}`);
+    const grantRole = await contractNFT.grantRole("0xa952726ef2588ad078edf35b066f7c7406e207cb0003bbaba8cb53eba9553e72",
+        salesAddress, {
+        gasLimit:5_000_000,
     });
     console.log(`grant Miner Role Transaction Hash: ${grantRole.hash}`);
 
@@ -50,28 +72,28 @@ task("transfer", "Transfer ownership").addParam("owner", "The new owner")
         const contractCrowdsale = await getContract(salesAddress, "Crowdsale", hre);
         const grantRole = await contractNFT.grantRole("0xa952726ef2588ad078edf35b066f7c7406e207cb0003bbaba8cb53eba9553e72",
             taskArguments.owner, {
-            gasLimit: 500_000,
+            gasLimit: 1_000_000,
         });
         console.log(`grant Miner Role Transaction Hash: ${grantRole.hash}`);
 
         await contractNFT.grantRole("0x0000000000000000000000000000000000000000000000000000000000000000",
             taskArguments.owner, {
-            gasLimit: 500_000,
+            gasLimit: 1_000_000,
         });
         await contractCrowdsale.grantRole("0x0000000000000000000000000000000000000000000000000000000000000000",
             taskArguments.owner, {
-            gasLimit: 500_000,
+            gasLimit: 1_000_000,
         });
 
         const oldOwner = await getAccount().getAddress();
         await contractCrowdsale.revokeRole("0x0000000000000000000000000000000000000000000000000000000000000000", oldOwner, {
-            gasLimit: 500_000,
+            gasLimit: 1_000_000,
         });
         await contractNFT.revokeRole("0x0000000000000000000000000000000000000000000000000000000000000000", oldOwner, {
-            gasLimit: 500_000,
+            gasLimit: 1_000_000,
         });
-        await contractNFT.transferOwnership(taskArguments.owner, { gasLimit: 500_000, });
-        const transferOwnership = await contractCrowdsale.transferOwnership(taskArguments.owner, { gasLimit: 500_000, });
+       // await contractNFT.transferOwnership(taskArguments.owner, { gasLimit: 1_000_000, });
+        const transferOwnership = await contractCrowdsale.transferOwnership(taskArguments.owner, { gasLimit: 1_000_000, });
         console.log(`transferOwnership Transaction Hash: ${transferOwnership.hash}`);
 
     });

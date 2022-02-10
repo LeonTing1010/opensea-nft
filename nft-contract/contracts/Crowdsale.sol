@@ -35,7 +35,7 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
         price = 0.01 ether;
     }
 
-    function mint(uint256 _amount) public payable onlyPositive(_amount) {
+    function mint(uint256 _amount) external payable onlyPositive(_amount) {
         require(block.timestamp >= openingTime, "Sales time has not started");
         require(
             msg.value == _amount.mul(price),
