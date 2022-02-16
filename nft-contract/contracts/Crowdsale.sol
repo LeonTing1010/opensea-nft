@@ -14,8 +14,8 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
     bytes32 public constant MINER_ROLE = keccak256("MINER_ROLE");
     address public collector; //
     address public nft;
-    uint32 public openingTime; // crowdsale opening time
-    uint32 public closingTime; // crowdsale closing time
+    bool public opening; // crowdsale opening status
+    bool public closing; // crowdsale closing status
     uint256 public max;
     uint256 public price;
 
@@ -23,7 +23,7 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
     mapping(address => uint256) sold;
 
     modifier onlyPositive(uint256 _number) {
-        require(_number >0, "Must be greater than 0");
+        require(_number > 0, "Must be greater than 0");
         _;
     }
 
@@ -31,18 +31,21 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
         // Grant the contract deployer the default admin role: it will be able to grant and revoke any roles
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         collector = msg.sender;
-        max = 5;
+        max = 10;
         price = 0.01 ether;
+        opening = false;
+        closing = false;
     }
 
     function mint(uint256 _amount) external payable onlyPositive(_amount) {
-        require(block.timestamp >= openingTime, "Sales time has not started");
+        require(opening, "Sales time has not started");
+        require(_amount < 6, "More than a single purchase");
         require(
             msg.value == _amount.mul(price),
             "Transaction value is not equal to price*_amount"
         );
         address miner = msg.sender;
-        if (block.timestamp <= closingTime) {
+        if (closing) {
             require(
                 hasRole(MINER_ROLE, miner),
                 "Please join the whitelist first"
@@ -90,7 +93,7 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
 
     function limit(address _account) public view returns (uint256) {
         uint256 result;
-        if (block.timestamp > closingTime) {
+        if (closing) {
             (, result) = max.trySub(sold[_account]);
             return result;
         }
@@ -127,15 +130,20 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
         nft = _nft;
     }
 
-    function setOpeningTime(uint32 _openingTime) external onlyOwner {
-        openingTime = _openingTime;
+    function setOpening(bool _opening) external onlyOwner {
+        opening = _opening;
     }
 
-    function setClosingTime(uint32 _closingTime) external onlyOwner {
-        closingTime = _closingTime;
+    function setClosing(bool _closing) external onlyOwner {
+        closing = _closing;
     }
 
     function setCollector(address _collector) external onlyOwner {
         collector = _collector;
+    }
+
+
+    function remaining() external view returns (uint256) {
+        return INFT(nft).remaining();
     }
 }

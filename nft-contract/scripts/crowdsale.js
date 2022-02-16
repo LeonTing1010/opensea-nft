@@ -58,7 +58,7 @@ task("mint", "Sales the NFT")
         const contract = await getContract(getEnvVariable("SALES_CONTRACT_ADDRESS"), contractName, hre);
         let price = ethers.BigNumber.from("10000000000000000");
         const transactionResponse = await contract.mint(taskArguments.amount, {
-            gasLimit: 500_000,
+            gasLimit: 5_000_000,
             value: price.mul(taskArguments.amount),
         });
         console.log(`Transaction Hash: ${transactionResponse.hash}`);

@@ -22,7 +22,7 @@ contract NFT is
     /// @dev Base token URI used as a prefix by tokenURI().
     string private baseTokenURI;
     string private collectionURI;
-    uint256 public constant TOTAL_SUPPLY = 7777;
+    uint256 public constant TOTAL_SUPPLY = 10000;
 
     constructor() ERC721("NFTSTAR", "NSTAR") {
         _initializeEIP712("NFTSTAR");
@@ -30,8 +30,12 @@ contract NFT is
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    function totalSupply() external pure returns (uint256) {
+    function totalSupply() public pure returns (uint256) {
         return TOTAL_SUPPLY;
+    }
+
+    function remaining() public override view returns (uint256) {
+        return TOTAL_SUPPLY - currentTokenId.current();
     }
 
     function mintTo(address recipient)
