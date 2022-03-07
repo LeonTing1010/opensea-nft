@@ -1,4 +1,4 @@
-require('dotenv').config();
+require("dotenv").config();
 require("@nomiclabs/hardhat-ethers");
 require("./scripts/deploy.js");
 require("./scripts/mint.js");
@@ -14,22 +14,26 @@ module.exports = {
     hardhat: {},
     ropsten: {
       url: `https://ropsten.infura.io/v3/${INFURA_KEY}`,
-      accounts: [`0x${ACCOUNT_PRIVATE_KEY}`]
+      accounts: [`0x${ACCOUNT_PRIVATE_KEY}`],
     },
     ethereum: {
       chainId: 1,
       url: `https://mainnet.infura.io/v3/${INFURA_KEY}`,
-      accounts: [`0x${ACCOUNT_PRIVATE_KEY}`]
+      accounts: [`0x${ACCOUNT_PRIVATE_KEY}`],
     },
     maticmum: {
       url: `https://polygon-mumbai.infura.io/v3/${INFURA_KEY}`,
-      accounts: [`0x${ACCOUNT_PRIVATE_KEY}`]
+      accounts: [`0x${ACCOUNT_PRIVATE_KEY}`],
     },
     rinkeby: {
-      url: ` https://rinkeby.infura.io/v3/${INFURA_KEY}`,
-      accounts: [`0x${ACCOUNT_PRIVATE_KEY}`]
+      url: `https://rinkeby.infura.io/v3/${INFURA_KEY}`,
+      accounts: [`0x${ACCOUNT_PRIVATE_KEY}`],
     },
-   
+    maas: {
+      chainId: 1088,
+      url: `http://124.70.219.113:8545`,
+      accounts: [`0x${ACCOUNT_PRIVATE_KEY}`],
+    },
   },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
@@ -39,8 +43,8 @@ module.exports = {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 200
-      }
-    }
+        runs: 200,
+      },
+    },
   },
-}
+};

@@ -3,7 +3,9 @@ pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "./ContextMixin.sol";
 import "./NativeMetaTransaction.sol";
 import "./INFT.sol";
@@ -11,7 +13,9 @@ import "./INFT.sol";
 contract NFT is
     INFT,
     ERC721,
+    ERC721Burnable,
     AccessControl,
+    Ownable,
     ContextMixin,
     NativeMetaTransaction
 {
@@ -22,10 +26,10 @@ contract NFT is
     /// @dev Base token URI used as a prefix by tokenURI().
     string private baseTokenURI;
     string private collectionURI;
-    uint256 public constant TOTAL_SUPPLY = 10000;
+    uint256 public constant TOTAL_SUPPLY = 10800;
 
-    constructor() ERC721("NFTSTAR", "NSTAR") {
-        _initializeEIP712("NFTSTAR");
+    constructor() ERC721("SONNY", "NSTAR") {
+        _initializeEIP712("SONNY");
         // Grant the contract deployer the default admin role: it will be able to grant and revoke any roles
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
@@ -34,7 +38,7 @@ contract NFT is
         return TOTAL_SUPPLY;
     }
 
-    function remaining() public override view returns (uint256) {
+    function remaining() public view override returns (uint256) {
         return TOTAL_SUPPLY - currentTokenId.current();
     }
 
@@ -45,7 +49,7 @@ contract NFT is
         returns (uint256)
     {
         uint256 tokenId = currentTokenId.current();
-        require(tokenId < TOTAL_SUPPLY, "Max supply reached");
+        require(tokenId <= TOTAL_SUPPLY, "Max supply reached");
         currentTokenId.increment();
         uint256 newItemId = currentTokenId.current();
         _safeMint(recipient, newItemId);
@@ -60,10 +64,7 @@ contract NFT is
         return collectionURI;
     }
 
-    function setContractURI(string memory _contractURI)
-        public
-        onlyRole(MINER_ROLE)
-    {
+    function setContractURI(string memory _contractURI) public onlyOwner {
         collectionURI = _contractURI;
     }
 
@@ -73,10 +74,7 @@ contract NFT is
     }
 
     /// @dev Sets the base token URI prefix.
-    function setBaseTokenURI(string memory _baseTokenURI)
-        public
-        onlyRole(MINER_ROLE)
-    {
+    function setBaseTokenURI(string memory _baseTokenURI) public onlyOwner {
         baseTokenURI = _baseTokenURI;
     }
 
@@ -85,22 +83,6 @@ contract NFT is
      */
     function _msgSender() internal view override returns (address sender) {
         return ContextMixin.msgSender();
-    }
-
-    /**
-     * As another option for supporting trading without requiring meta transactions, override isApprovedForAll to whitelist OpenSea proxy accounts on Matic
-     */
-    function isApprovedForAll(address _owner, address _operator)
-        public
-        view
-        override
-        returns (bool isOperator)
-    {
-        if (_operator == address(0x58807baD0B376efc12F5AD86aAc70E78ed67deaE)) {
-            return true;
-        }
-
-        return ERC721.isApprovedForAll(_owner, _operator);
     }
 
     /**

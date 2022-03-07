@@ -6,9 +6,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./INFT.sol";
 
-contract Crowdsale is PullPayment, Ownable, AccessControl {
+contract Crowdsale is PullPayment, Ownable, AccessControl, ReentrancyGuard {
     using SafeMath for uint256;
     // Create a new role identifier for the minter role
     bytes32 public constant MINER_ROLE = keccak256("MINER_ROLE");
@@ -17,7 +18,9 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
     bool public opening; // crowdsale opening status
     bool public closing; // crowdsale closing status
     uint256 public max;
-    uint256 public price;
+    uint256 public limit;
+    uint256 public publicSalePrice;
+    uint256 public preSalePrice;
 
     mapping(address => uint256) quotas;
     mapping(address => uint256) sold;
@@ -32,28 +35,34 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         collector = msg.sender;
         max = 10;
-        price = 0.01 ether;
+        limit = 5;
+        preSalePrice = 0.5 ether;
+        publicSalePrice = 0.5 ether;
         opening = false;
         closing = false;
     }
 
-    function mint(uint256 _amount) external payable onlyPositive(_amount) {
+    function mint(uint256 _amount)
+        external
+        payable
+        onlyPositive(_amount)
+        nonReentrant
+    {
         require(opening, "Sales time has not started");
-        require(_amount < 6, "More than a single purchase");
-        require(
-            msg.value == _amount.mul(price),
-            "Transaction value is not equal to price*_amount"
-        );
+        require(_amount <= limit, "More than one purchase");
+
         address miner = msg.sender;
-        if (closing) {
-            require(
-                hasRole(MINER_ROLE, miner),
-                "Please join the whitelist first"
-            );
+        if (!closing) {
+            require(msg.value == _amount.mul(preSalePrice), "Not Enough ETH");
+            require(hasRole(MINER_ROLE, miner), "Address not whitelisted");
             sold[miner] = _amount.add(sold[miner]);
             (bool ok, ) = quotas[miner].trySub(sold[miner]);
-            require(ok, "Over the limit");
+            require(ok, "Exceeds Allocation");
         } else {
+            require(
+                msg.value == _amount.mul(publicSalePrice),
+                "Not Enough ETH"
+            );
             sold[miner] = _amount.add(sold[miner]);
             (bool ok, ) = max.trySub(sold[miner]);
             require(ok, "Exceeded maximum quantity limit");
@@ -63,16 +72,6 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
         for (uint256 index = 0; index < _amount; index++) {
             INFT(nft).mintTo(miner);
         }
-    }
-
-    function setLimit(address _account, uint256 _limit)
-        public
-        onlyOwner
-        onlyPositive(_limit)
-    {
-        require(_limit <= max, "Exceeded maximum quantity limit");
-        quotas[_account] = _limit;
-        super.grantRole(MINER_ROLE, _account);
     }
 
     function grantLimits(address[] memory _accounts, uint256[] memory _limits)
@@ -91,7 +90,22 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
         }
     }
 
-    function limit(address _account) public view returns (uint256) {
+    function gift(address[] memory _accounts, uint256[] memory _amounts)
+        external
+        onlyOwner
+    {
+        require(
+            _accounts.length == _amounts.length,
+            "_accounts does not match _amounts length"
+        );
+        for (uint256 c = 0; c < _accounts.length; c++) {
+            for (uint256 m = 0; m < _amounts[c]; m++) {
+                INFT(nft).mintTo(_accounts[c]);
+            }
+        }
+    }
+
+    function allowance(address _account) public view returns (uint256) {
         uint256 result;
         if (closing) {
             (, result) = max.trySub(sold[_account]);
@@ -105,8 +119,20 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
         return sold[_account];
     }
 
-    function setPrice(uint256 _price) external onlyOwner onlyPositive(_price) {
-        price = _price;
+    function setPreSalePrice(uint256 _price)
+        external
+        onlyOwner
+        onlyPositive(_price)
+    {
+        preSalePrice = _price;
+    }
+
+    function setPublicSalePrice(uint256 _price)
+        external
+        onlyOwner
+        onlyPositive(_price)
+    {
+        publicSalePrice = _price;
     }
 
     function setMaxAmount(uint32 _amount)
@@ -117,16 +143,16 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
         max = _amount;
     }
 
-    // /// @dev Overridden in order to make it an onlyOwner function
-    // function withdrawPayments(address payable _payee)
-    //     public
-    //     virtual
-    //     override
-    // {
-    //     super.withdrawPayments(_payee);
-    // }
+    function setMaxLimit(uint32 _limit)
+        external
+        onlyOwner
+        onlyPositive(_limit)
+    {
+        limit = _limit;
+    }
 
     function setNft(address _nft) external onlyOwner {
+        require(_nft != address(0), "invalid address");
         nft = _nft;
     }
 
@@ -141,7 +167,6 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
     function setCollector(address _collector) external onlyOwner {
         collector = _collector;
     }
-
 
     function remaining() external view returns (uint256) {
         return INFT(nft).remaining();
