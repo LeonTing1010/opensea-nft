@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.0;
 
-import "./EIP712Base.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {EIP712Base} from "./EIP712Base.sol";
 
-/**
- * https://github.com/maticnetwork/pos-portal/blob/master/contracts/common/NativeMetaTransa ction.sol
- */
 contract NativeMetaTransaction is EIP712Base {
+    using SafeMath for uint256;
     bytes32 private constant META_TRANSACTION_TYPEHASH =
         keccak256(
             bytes(
@@ -32,25 +31,28 @@ contract NativeMetaTransaction is EIP712Base {
         bytes functionSignature;
     }
 
-    function executeMetaTransaction(
+    function executeMetaTransactionWithExternalNonce(
         address userAddress,
         bytes memory functionSignature,
         bytes32 sigR,
         bytes32 sigS,
-        uint8 sigV
+        uint8 sigV,
+        uint256 userNonce
     ) public payable returns (bytes memory) {
         MetaTransaction memory metaTx = MetaTransaction({
-            nonce: nonces[userAddress],
+            nonce: userNonce,
             from: userAddress,
             functionSignature: functionSignature
         });
+
         require(
             verify(userAddress, metaTx, sigR, sigS, sigV),
             "Signer and signature do not match"
         );
 
+        require(userNonce >= nonces[userAddress]);
         // increase nonce for user (to avoid re-use)
-        nonces[userAddress] = nonces[userAddress] + 1;
+        nonces[userAddress] = userNonce.add(1);
 
         emit MetaTransactionExecuted(
             userAddress,

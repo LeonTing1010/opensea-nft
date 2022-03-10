@@ -6,24 +6,30 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./INFT.sol";
 
-contract Crowdsale is PullPayment, Ownable, AccessControl, ReentrancyGuard {
+contract Crowdsale is PullPayment, Ownable, AccessControl {
     using SafeMath for uint256;
     // Create a new role identifier for the minter role
     bytes32 public constant MINER_ROLE = keccak256("MINER_ROLE");
+    bytes32 public constant GIFT_ROLE = keccak256("GIFT_ROLE");
     address public collector; //
     address public nft;
     bool public opening; // crowdsale opening status
     bool public closing; // crowdsale closing status
-    uint256 public max;
-    uint256 public limit;
-    uint256 public publicSalePrice;
-    uint256 public preSalePrice;
+    uint256 public max = 10;
+    uint256 public limit = 5;
+    uint256 public publicSalePrice = 0.5 ether;
+    uint256 public preSalePrice = 0.5 ether;
+    uint256 public giftLimit = 200;
 
     mapping(address => uint256) quotas;
     mapping(address => uint256) sold;
+
+    event PublicSalePriceChanged(uint256 price);
+    event PreSalePriceChanged(uint256 price);
+    event PreSaleStarted(bool opening);
+    event PublicSaleStarted(bool closing);
 
     modifier onlyPositive(uint256 _number) {
         require(_number > 0, "Must be greater than 0");
@@ -34,20 +40,9 @@ contract Crowdsale is PullPayment, Ownable, AccessControl, ReentrancyGuard {
         // Grant the contract deployer the default admin role: it will be able to grant and revoke any roles
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         collector = msg.sender;
-        max = 10;
-        limit = 5;
-        preSalePrice = 0.5 ether;
-        publicSalePrice = 0.5 ether;
-        opening = false;
-        closing = false;
     }
 
-    function mint(uint256 _amount)
-        external
-        payable
-        onlyPositive(_amount)
-        nonReentrant
-    {
+    function mint(uint256 _amount) external payable onlyPositive(_amount) {
         require(opening, "Sales time has not started");
         require(_amount <= limit, "More than one purchase");
 
@@ -90,18 +85,13 @@ contract Crowdsale is PullPayment, Ownable, AccessControl, ReentrancyGuard {
         }
     }
 
-    function gift(address[] memory _accounts, uint256[] memory _amounts)
-        external
-        onlyOwner
-    {
-        require(
-            _accounts.length == _amounts.length,
-            "_accounts does not match _amounts length"
-        );
+    function gift(address[] memory _accounts) external onlyRole(GIFT_ROLE) {
+        require(!opening, "Gift time is over");
+        (bool ok, uint256 _giftLimit) = giftLimit.trySub(_accounts.length);
+        require(ok, "Exceeded maximum gift limit");
+        giftLimit = _giftLimit;
         for (uint256 c = 0; c < _accounts.length; c++) {
-            for (uint256 m = 0; m < _amounts[c]; m++) {
-                INFT(nft).mintTo(_accounts[c]);
-            }
+            INFT(nft).mintTo(_accounts[c]);
         }
     }
 
@@ -125,6 +115,7 @@ contract Crowdsale is PullPayment, Ownable, AccessControl, ReentrancyGuard {
         onlyPositive(_price)
     {
         preSalePrice = _price;
+        emit PreSalePriceChanged(preSalePrice);
     }
 
     function setPublicSalePrice(uint256 _price)
@@ -133,6 +124,7 @@ contract Crowdsale is PullPayment, Ownable, AccessControl, ReentrancyGuard {
         onlyPositive(_price)
     {
         publicSalePrice = _price;
+        emit PublicSalePriceChanged(publicSalePrice);
     }
 
     function setMaxAmount(uint32 _amount)
@@ -158,13 +150,16 @@ contract Crowdsale is PullPayment, Ownable, AccessControl, ReentrancyGuard {
 
     function setOpening(bool _opening) external onlyOwner {
         opening = _opening;
+        emit PreSaleStarted(opening);
     }
 
     function setClosing(bool _closing) external onlyOwner {
         closing = _closing;
+        emit PublicSaleStarted(closing);
     }
 
     function setCollector(address _collector) external onlyOwner {
+        require(_collector != address(0), "invalid address");
         collector = _collector;
     }
 
