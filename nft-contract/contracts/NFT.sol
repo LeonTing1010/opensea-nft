@@ -61,7 +61,7 @@ contract NFT is
         return newItemId;
     }
 
-    function tokensOfOwner(address owner)
+    function ownerTokens(address owner)
         public
         view
         returns (uint256[] memory)
