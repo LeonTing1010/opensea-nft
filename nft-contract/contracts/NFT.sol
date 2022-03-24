@@ -56,6 +56,19 @@ contract NFT is
         return newItemId;
     }
 
+    function tokensOfOwner(address owner)
+        public
+        view
+        returns (uint256[] memory)
+    {
+        uint256 size = ERC721.balanceOf(owner);
+        uint256[] memory items = new uint256[](size);
+        for (uint256 i = 0; i < size; i++) {
+            items[i] = tokenOfOwnerByIndex(owner, i);
+        }
+        return items;
+    }
+
     function current() public view returns (uint256) {
         return currentTokenId.current();
     }
