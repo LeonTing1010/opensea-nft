@@ -6,6 +6,8 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Pausable.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "./ContextMixin.sol";
 import "./NativeMetaTransaction.sol";
 import "./INFT.sol";
@@ -14,6 +16,8 @@ contract NFT is
     INFT,
     ERC721,
     ERC721Burnable,
+    ERC721Pausable,
+    ERC721Enumerable,
     AccessControl,
     Ownable,
     ContextMixin,
@@ -21,6 +25,7 @@ contract NFT is
 {
     // Create a new role identifier for the minter role
     bytes32 public constant MINER_ROLE = keccak256("MINER_ROLE");
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     using Counters for Counters.Counter;
     Counters.Counter private currentTokenId;
     /// @dev Base token URI used as a prefix by tokenURI().
@@ -34,7 +39,7 @@ contract NFT is
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    function totalSupply() public pure returns (uint256) {
+    function totalSupply() public pure override returns (uint256) {
         return TOTAL_SUPPLY;
     }
 
@@ -67,6 +72,40 @@ contract NFT is
             items[i] = tokenOfOwnerByIndex(owner, i);
         }
         return items;
+    }
+
+    /**
+     * @dev Pauses all token transfers.
+     *
+     * See {ERC721Pausable} and {Pausable-_pause}.
+     *
+     * Requirements:
+     *
+     * - the caller must have the `PAUSER_ROLE`.
+     */
+    function pause() public virtual {
+        require(
+            hasRole(PAUSER_ROLE, _msgSender()),
+            "NFT: must have pauser role to pause"
+        );
+        _pause();
+    }
+
+    /**
+     * @dev Unpauses all token transfers.
+     *
+     * See {ERC721Pausable} and {Pausable-_unpause}.
+     *
+     * Requirements:
+     *
+     * - the caller must have the `PAUSER_ROLE`.
+     */
+    function unpause() public virtual {
+        require(
+            hasRole(PAUSER_ROLE, _msgSender()),
+            "NFT: must have pauser role to unpause"
+        );
+        _unpause();
     }
 
     function current() public view returns (uint256) {
@@ -105,9 +144,19 @@ contract NFT is
         public
         view
         virtual
-        override(AccessControl, ERC721)
+        override(AccessControl, ERC721, ERC721Enumerable)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId);
+        return
+            interfaceId == type(INFT).interfaceId ||
+            super.supportsInterface(interfaceId);
+    }
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal virtual override(ERC721, ERC721Pausable, ERC721Enumerable) {
+        super._beforeTokenTransfer(from, to, amount);
     }
 }
