@@ -37,6 +37,8 @@ contract NFT is
         _initializeEIP712("SONNY");
         // Grant the contract deployer the default admin role: it will be able to grant and revoke any roles
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setupRole(MINER_ROLE, msg.sender);
+        _setupRole(PAUSER_ROLE, msg.sender);
     }
 
     function totalSupply() public pure override returns (uint256) {
@@ -61,11 +63,7 @@ contract NFT is
         return newItemId;
     }
 
-    function ownerTokens(address owner)
-        public
-        view
-        returns (uint256[] memory)
-    {
+    function ownerTokens(address owner) public view returns (uint256[] memory) {
         uint256 size = ERC721.balanceOf(owner);
         uint256[] memory items = new uint256[](size);
         for (uint256 i = 0; i < size; i++) {
