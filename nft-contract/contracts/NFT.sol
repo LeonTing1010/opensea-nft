@@ -31,10 +31,10 @@ contract NFT is
     /// @dev Base token URI used as a prefix by tokenURI().
     string private baseTokenURI;
     string private collectionURI;
-    uint256 public constant TOTAL_SUPPLY = 10800;
+    uint256 public constant TOTAL_SUPPLY = 200;
 
-    constructor() ERC721("SONNY", "NSTAR") {
-        _initializeEIP712("SONNY");
+    constructor() ERC721("FIGO", "NSTAR") {
+        _initializeEIP712("FIGO");
         // Grant the contract deployer the default admin role: it will be able to grant and revoke any roles
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(MINER_ROLE, msg.sender);
