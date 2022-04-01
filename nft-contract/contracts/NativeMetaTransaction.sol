@@ -49,8 +49,7 @@ contract NativeMetaTransaction is EIP712Base {
             verify(userAddress, metaTx, sigR, sigS, sigV),
             "Signer and signature do not match"
         );
-
-        require(userNonce >= nonces[userAddress]);
+        require(userNonce == nonces[userAddress]);
         // increase nonce for user (to avoid re-use)
         nonces[userAddress] = userNonce.add(1);
 

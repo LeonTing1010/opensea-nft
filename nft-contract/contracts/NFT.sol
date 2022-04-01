@@ -31,7 +31,7 @@ contract NFT is
     /// @dev Base token URI used as a prefix by tokenURI().
     string private baseTokenURI;
     string private collectionURI;
-    uint256 public constant TOTAL_SUPPLY = 10800;
+    uint256 public constant TOTAL_SUPPLY = 1;
 
     constructor() ERC721("SONNY", "NSTAR") {
         _initializeEIP712("SONNY");
@@ -56,7 +56,7 @@ contract NFT is
         returns (uint256)
     {
         uint256 tokenId = currentTokenId.current();
-        require(tokenId <= TOTAL_SUPPLY, "Max supply reached");
+        require(tokenId < TOTAL_SUPPLY, "Max supply reached");
         currentTokenId.increment();
         uint256 newItemId = currentTokenId.current();
         _safeMint(recipient, newItemId);
