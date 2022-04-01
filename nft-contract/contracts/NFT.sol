@@ -31,22 +31,17 @@ contract NFT is
     /// @dev Base token URI used as a prefix by tokenURI().
     string private baseTokenURI;
     string private collectionURI;
-    uint256 public constant TOTAL_SUPPLY = 1;
 
-    constructor() ERC721("SONNY", "NSTAR") {
-        _initializeEIP712("SONNY");
+    constructor() ERC721("NFTStar", "NST") {
+        _initializeEIP712("NFTStar");
         // Grant the contract deployer the default admin role: it will be able to grant and revoke any roles
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(MINER_ROLE, msg.sender);
         _setupRole(PAUSER_ROLE, msg.sender);
     }
 
-    function totalSupply() public pure override returns (uint256) {
-        return TOTAL_SUPPLY;
-    }
-
     function remaining() public view override returns (uint256) {
-        return TOTAL_SUPPLY - currentTokenId.current();
+        return totalSupply() - currentTokenId.current();
     }
 
     function mintTo(address recipient)
@@ -56,7 +51,6 @@ contract NFT is
         returns (uint256)
     {
         uint256 tokenId = currentTokenId.current();
-        require(tokenId < TOTAL_SUPPLY, "Max supply reached");
         currentTokenId.increment();
         uint256 newItemId = currentTokenId.current();
         _safeMint(recipient, newItemId);
