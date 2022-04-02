@@ -50,7 +50,6 @@ contract NFT is
         onlyRole(MINER_ROLE)
         returns (uint256)
     {
-        uint256 tokenId = currentTokenId.current();
         currentTokenId.increment();
         uint256 newItemId = currentTokenId.current();
         _safeMint(recipient, newItemId);
