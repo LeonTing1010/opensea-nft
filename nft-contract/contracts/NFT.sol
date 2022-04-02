@@ -31,7 +31,7 @@ contract NFT is
     /// @dev Base token URI used as a prefix by tokenURI().
     string private baseTokenURI;
     string private collectionURI;
-    uint256 public constant TOTAL_SUPPLY = 1;
+    uint256 public constant TOTAL_SUPPLY = 10800;
 
     constructor() ERC721("SONNY", "NSTAR") {
         _initializeEIP712("SONNY");
