@@ -12,6 +12,19 @@ task("deploy-nft", "Deploys the NFT.sol contract").setAction(async function (tas
   console.log(`Contract deployed to address: ${nft.address}`);
 });
 
+task("deploy-factory", "Deploys the NFTFactory.sol contract")
+  .addParam("nft", "NFT contract")
+  .setAction(async function (taskArguments, hre) {
+    const nftContractFactory = await hre.ethers.getContractFactory("NFTFactory", getAccount());
+    const nft = await nftContractFactory.deploy(taskArguments.nft, 5, "0x58807bad0b376efc12f5ad86aac70e78ed67deae");
+    console.log(`Contract deployed to address: ${nft.address}`);
+    const contractNFT = await getContract(taskArguments.nft, "NFT", hre);
+    const grantRole = await contractNFT.grantRole("0xa952726ef2588ad078edf35b066f7c7406e207cb0003bbaba8cb53eba9553e72", nft.address, {
+      gasLimit: 2_000_000,
+    });
+    console.log(`grant Miner Role Transaction Hash: ${grantRole.hash}`);
+  });
+
 task("deploy-crowdsale", "Deploys the Crowdsale.sol contract").setAction(async function (taskArguments, hre) {
   const nftContractFactory = await hre.ethers.getContractFactory("Crowdsale", getAccount());
   const nft = await nftContractFactory.deploy();

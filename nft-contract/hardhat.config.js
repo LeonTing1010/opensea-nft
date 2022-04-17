@@ -22,7 +22,8 @@ module.exports = {
       accounts: [`0x${ACCOUNT_PRIVATE_KEY}`],
     },
     maticmum: {
-      url: `https://polygon-mumbai.infura.io/v3/${INFURA_KEY}`,
+      // url: `https://polygon-mumbai.infura.io/v3/${INFURA_KEY}`,
+      url: "https://rpc-mumbai.matic.today",
       accounts: [`0x${ACCOUNT_PRIVATE_KEY}`],
     },
     rinkeby: {

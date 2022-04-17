@@ -56,7 +56,7 @@ contract NFT is
         returns (uint256)
     {
         uint256 tokenId = currentTokenId.current();
-        require(tokenId < TOTAL_SUPPLY, "Max supply reached");
+        require(tokenId <= TOTAL_SUPPLY, "Max supply reached");
         currentTokenId.increment();
         uint256 newItemId = currentTokenId.current();
         _safeMint(recipient, newItemId);
@@ -83,7 +83,7 @@ contract NFT is
      */
     function pause() public virtual {
         require(
-            hasRole(PAUSER_ROLE, _msgSender()),
+            hasRole(PAUSER_ROLE, msgSender()),
             "NFT: must have pauser role to pause"
         );
         _pause();
@@ -100,7 +100,7 @@ contract NFT is
      */
     function unpause() public virtual {
         require(
-            hasRole(PAUSER_ROLE, _msgSender()),
+            hasRole(PAUSER_ROLE, msgSender()),
             "NFT: must have pauser role to unpause"
         );
         _unpause();
@@ -126,13 +126,6 @@ contract NFT is
     /// @dev Sets the base token URI prefix.
     function setBaseTokenURI(string memory _baseTokenURI) public onlyOwner {
         baseTokenURI = _baseTokenURI;
-    }
-
-    /**
-     * This is used instead of msg.sender as transactions won't be sent by the original token owner, but by OpenSea.
-     */
-    function _msgSender() internal view override returns (address sender) {
-        return ContextMixin.msgSender();
     }
 
     /**

@@ -19,8 +19,8 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
     bool public closing; // crowdsale closing status
     uint256 public max = 10;
     uint256 public limit = 5;
-    uint256 public publicSalePrice = 0.5 ether;
-    uint256 public preSalePrice = 0.5 ether;
+    uint256 public publicSalePrice = 0.01 ether;
+    uint256 public preSalePrice = 0.01 ether;
     uint256 public giftLimit = 200;
 
     mapping(address => uint256) quotas;
