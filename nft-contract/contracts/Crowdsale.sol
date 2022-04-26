@@ -14,7 +14,7 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
     bytes32 public constant MINER_ROLE = keccak256("MINER_ROLE");
     bytes32 public constant GIFT_ROLE = keccak256("GIFT_ROLE");
     address public collector; //
-    address public nft;
+    INFT public token;
     bool public opening; // crowdsale opening status
     bool public closing; // crowdsale closing status
     uint256 public max = 10;
@@ -65,7 +65,7 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
         _asyncTransfer(collector, msg.value);
 
         for (uint256 index = 0; index < _amount; index++) {
-            INFT(nft).mintTo(miner);
+            token.mintTo(miner);
         }
     }
 
@@ -91,7 +91,7 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
         require(ok, "Exceeded maximum gift limit");
         giftLimit = _giftLimit;
         for (uint256 c = 0; c < _accounts.length; c++) {
-            INFT(nft).mintTo(_accounts[c]);
+            token.mintTo(_accounts[c]);
         }
     }
 
@@ -145,7 +145,7 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
 
     function setNft(address _nft) external onlyOwner {
         require(_nft != address(0), "invalid address");
-        nft = _nft;
+        token = INFT(_nft);
     }
 
     function setOpening(bool _opening) external onlyOwner {
@@ -164,6 +164,6 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
     }
 
     function remaining() external view returns (uint256) {
-        return INFT(nft).remaining();
+        return token.remaining();
     }
 }

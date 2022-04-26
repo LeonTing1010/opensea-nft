@@ -47,8 +47,8 @@ contract NFTFactory is
     }
 
     modifier checkValidOptionId(uint256 _optionId) {
-        // options are 0-indexed so check should be inclusive
-        if (_optionId >= NUM_OPTIONS) {
+        // options are 1-indexed so check should be inclusive
+        if (_optionId > NUM_OPTIONS) {
             revert InvalidOptionId();
         }
         _;
@@ -60,8 +60,8 @@ contract NFTFactory is
     }
 
     /// @notice Sets the nft address for FactoryMintable.
-    function setNFT(FactoryMintable _token) external onlyOwner {
-        token = _token;
+    function setNFT(address _token) external onlyOwner {
+        token = FactoryMintable(_token);
     }
 
     /// @notice Sets the base URI for constructing tokenURI values for options.
@@ -96,7 +96,7 @@ contract NFTFactory is
 
     ///@notice "burn" option by sending it to 0 address. This will hide all active listings. Called as part of interactBurnInvalidOptionIds
     function _burnInvalidOptions() internal {
-        for (uint256 i = 1; i < NUM_OPTIONS; ++i) {
+        for (uint256 i = 1; i <= NUM_OPTIONS; ++i) {
             if (!token.factoryCanMint(i)) {
                 emit Transfer(owner(), address(0), i);
             }
