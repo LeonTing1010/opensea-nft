@@ -20,7 +20,12 @@ contract NFTFactoryERC721 is
     {
         maxSupply = totalSupply();
         tokenFactory = address(
-            new NFTFactory("ipfs://options", owner(), 5, _proxyAddress)
+            new NFTFactory(
+                "https://cdn.nftstar.com/sonny/metadata/",
+                owner(),
+                5,
+                _proxyAddress
+            )
         );
         _setupRole(MINER_ROLE, tokenFactory);
     }

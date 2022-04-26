@@ -21,7 +21,7 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
     uint256 public limit = 5;
     uint256 public publicSalePrice = 0.01 ether;
     uint256 public preSalePrice = 0.01 ether;
-    uint256 public giftLimit = 200;
+    uint256 public giftLimit = 251;
 
     mapping(address => uint256) quotas;
     mapping(address => uint256) sold;
@@ -48,7 +48,7 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
 
         address miner = msg.sender;
         if (!closing) {
-            require(msg.value == _amount.mul(preSalePrice), "Not equal to ETH");
+            require(msg.value == _amount.mul(preSalePrice), "Payment declined");
             require(hasRole(MINER_ROLE, miner), "Address not whitelisted");
             sold[miner] = _amount.add(sold[miner]);
             (bool ok, ) = quotas[miner].trySub(sold[miner]);
@@ -56,7 +56,7 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
         } else {
             require(
                 msg.value == _amount.mul(publicSalePrice),
-                "Not equal to ETH"
+                "Payment declined"
             );
             sold[miner] = _amount.add(sold[miner]);
             (bool ok, ) = max.trySub(sold[miner]);

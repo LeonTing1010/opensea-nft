@@ -59,6 +59,11 @@ contract NFTFactory is
         _burnInvalidOptions();
     }
 
+    /// @notice Sets the nft address for FactoryMintable.
+    function setNFT(FactoryMintable _token) external onlyOwner {
+        token = _token;
+    }
+
     /// @notice Sets the base URI for constructing tokenURI values for options.
     function setBaseOptionURI(string memory _baseOptionURI) public onlyOwner {
         optionURI = _baseOptionURI;
