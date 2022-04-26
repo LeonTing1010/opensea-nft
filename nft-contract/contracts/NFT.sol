@@ -57,7 +57,7 @@ contract NFT is
         returns (uint256)
     {
         uint256 tokenId = currentTokenId.current();
-        require(tokenId <= TOTAL_SUPPLY, "Max supply reached");
+        require(tokenId < TOTAL_SUPPLY, "Max supply reached");
         currentTokenId.increment();
         uint256 newItemId = currentTokenId.current();
         _safeMint(recipient, newItemId);
