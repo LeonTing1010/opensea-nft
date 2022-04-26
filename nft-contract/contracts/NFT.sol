@@ -129,11 +129,11 @@ contract NFT is
         baseTokenURI = _baseTokenURI;
     }
 
-    function setDefaultAdmin(address _defaultAdmin)
+    function transferDefaultAdmin(address newDefaultAdmin)
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
-        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
+        _setupRole(DEFAULT_ADMIN_ROLE, newDefaultAdmin);
     }
 
     /**
