@@ -23,14 +23,14 @@ contract NFTFactoryERC721 is
         maxSupply = totalSupply();
         tokenFactory = address(
             new NFTFactory(
-                "https://cdn.nftstar.com/sonny/metadata/",
+                "https://cdn.nftstar.com/hm-son-mint/metadata/",
                 owner(),
                 5,
                 _proxyAddress
             )
         );
         _setupRole(MINER_ROLE, tokenFactory);
-        emit Transfer(address(0), owner(), 0);
+        //emit Transfer(address(0), owner(), 0);
     }
 
     function factoryMint(uint256 _optionId, address _to)

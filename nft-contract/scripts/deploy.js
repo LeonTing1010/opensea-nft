@@ -14,7 +14,8 @@ task("deploy-nft", "Deploys the NFT.sol contract").setAction(async function (tas
 
 task("deploy-factory", "Deploys the NFTFactoryERC721.sol contract").setAction(async function (taskArguments, hre) {
   const nftContractFactory = await hre.ethers.getContractFactory("NFTFactoryERC721", getAccount());
-  const nft = await nftContractFactory.deploy("0x58807bad0b376efc12f5ad86aac70e78ed67deae");
+  const nft = await nftContractFactory.deploy("0x58807bad0b376efc12f5ad86aac70e78ed67deae"); //rinkeby
+  //0xa5409ec958c83c3f309868babaca7c86dcb077c1 main
   console.log(`NFTFactoryERC721 deployed to address: ${nft.address}`);
   // const contractNFT = await getContract(taskArguments.nft, "NFT", hre);
   // const grantRole = await contractNFT.grantRole("0xa952726ef2588ad078edf35b066f7c7406e207cb0003bbaba8cb53eba9553e72", nft.address, {

@@ -19,9 +19,9 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
     bool public closing; // crowdsale closing status
     uint256 public max = 10;
     uint256 public limit = 5;
-    uint256 public publicSalePrice = 0.01 ether;
-    uint256 public preSalePrice = 0.01 ether;
-    uint256 public giftLimit = 251;
+    uint256 public publicSalePrice = 0.09 ether;
+    uint256 public preSalePrice = 0.07 ether;
+    uint256 public giftLimit = 300;
 
     mapping(address => uint256) quotas;
     mapping(address => uint256) sold;
@@ -165,5 +165,12 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
 
     function remaining() external view returns (uint256) {
         return token.remaining();
+    }
+
+    function transferRoleAdmin(address newDefaultAdmin)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        _setupRole(DEFAULT_ADMIN_ROLE, newDefaultAdmin);
     }
 }

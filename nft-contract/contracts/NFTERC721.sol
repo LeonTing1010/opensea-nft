@@ -31,11 +31,12 @@ contract NFTERC721 is
     /// @dev Base token URI used as a prefix by tokenURI().
     string private baseTokenURI;
     string private collectionURI;
-    uint256 public constant TOTAL_SUPPLY = 20;
+    uint256 public constant TOTAL_SUPPLY = 10800;
 
-    constructor() ERC721("SONNY", "NSTAR") {
+    constructor() ERC721("SONNY", "HM-SON") {
         _initializeEIP712("SONNY");
-        baseTokenURI = "https://cdn.nftstar.com/sonny/metadata/";
+        baseTokenURI = "https://cdn.nftstar.com/hm-son/metadata/";
+        collectionURI = "https://cdn.nftstar.com/hm-son/meta-son-heung-min.json";
         // Grant the contract deployer the default admin role: it will be able to grant and revoke any roles
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(MINER_ROLE, msg.sender);
