@@ -4,6 +4,7 @@ require("./scripts/deploy.js");
 require("./scripts/mint.js");
 require("./scripts/crowdsale.js");
 require("@nomiclabs/hardhat-etherscan");
+// require("hardhat-gas-reporter");
 
 const { INFURA_KEY, ACCOUNT_PRIVATE_KEY, ETHERSCAN_API_KEY, NETWORK } = process.env;
 
@@ -20,6 +21,7 @@ module.exports = {
       chainId: 1,
       url: `https://mainnet.infura.io/v3/${INFURA_KEY}`,
       accounts: [`0x${ACCOUNT_PRIVATE_KEY}`],
+      gasPrice: 20000000000,
     },
     maticmum: {
       // url: `https://polygon-mumbai.infura.io/v3/${INFURA_KEY}`,
