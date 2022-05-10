@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "./NFTERC721.sol";
+import "./NFTERC721A.sol";
 import "./NFTFactory.sol";
 import "./FactoryMintable.sol";
 import "./AllowsConfigurableProxy.sol";
 
 contract NFTFactoryERC721 is
-    NFTERC721,
+    NFTERC721A,
     FactoryMintable,
     ReentrancyGuard,
     AllowsConfigurableProxy
@@ -40,9 +40,7 @@ contract NFTFactoryERC721 is
         onlyFactory
         canMint(_optionId)
     {
-        for (uint256 i; i < _optionId; ++i) {
-            mintTo(_to);
-        }
+        mintTo(_to, _optionId);
     }
 
     function factoryCanMint(uint256 _optionId)

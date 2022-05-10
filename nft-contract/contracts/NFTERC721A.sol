@@ -1,23 +1,24 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Pausable.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "erc721a/contracts/ERC721A.sol";
+import "erc721a/contracts/extensions/ERC721ABurnable.sol";
+import "erc721a/contracts/extensions/ERC721AQueryable.sol";
+import "erc721a/contracts/extensions/ERC721AOwnersExplicit.sol";
 import "./ContextMixin.sol";
 import "./NativeMetaTransaction.sol";
-import "./INFT.sol";
+import "./ERC721APausable.sol";
 
-contract NFTERC721 is
-    INFT,
-    ERC721,
-    ERC721Burnable,
-    ERC721Pausable,
-    ERC721Enumerable,
+contract NFTERC721A is
+    ERC721A,
+    ERC721ABurnable,
+    ERC721AQueryable,
+    ERC721AOwnersExplicit,
+    ERC721APausable,
     AccessControl,
     Ownable,
     ContextMixin,
@@ -26,14 +27,15 @@ contract NFTERC721 is
     // Create a new role identifier for the minter role
     bytes32 public constant MINER_ROLE = keccak256("MINER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
-    using Counters for Counters.Counter;
+    // using Counters for Counters.Counter;
     Counters.Counter private currentTokenId;
     /// @dev Base token URI used as a prefix by tokenURI().
     string private baseTokenURI;
     string private collectionURI;
-    uint256 public constant TOTAL_SUPPLY = 10800;
 
-    constructor() ERC721("SONNY", "HM-SON") {
+    // uint256 public constant TOTAL_SUPPLY = 10800;
+
+    constructor() ERC721A("SONNY", "HM-SON") {
         _initializeEIP712("SONNY");
         baseTokenURI = "https://cdn.nftstar.com/hm-son/metadata/";
         collectionURI = "https://cdn.nftstar.com/hm-son/meta-son-heung-min.json";
@@ -43,36 +45,24 @@ contract NFTERC721 is
         _setupRole(PAUSER_ROLE, msg.sender);
     }
 
-    function totalSupply() public pure override returns (uint256) {
-        return TOTAL_SUPPLY;
+    // function totalSupply() public view override returns (uint256) {
+    //     return TOTAL_SUPPLY;
+    // }
+
+    // function remaining() public view override returns (uint256) {
+    //     return totalSupply() - currentTokenId.current();
+    // }
+
+    function mintTo(address to, uint256 quantity) public onlyRole(MINER_ROLE) {
+        _safeMint(to, quantity);
     }
 
-    function remaining() public view override returns (uint256) {
-        return TOTAL_SUPPLY - currentTokenId.current();
-    }
-
-    function mintTo(address recipient)
-        public
-        override
-        onlyRole(MINER_ROLE)
-        returns (uint256)
-    {
-        uint256 tokenId = currentTokenId.current();
-        require(tokenId < TOTAL_SUPPLY, "Max supply reached");
-        currentTokenId.increment();
-        uint256 newItemId = currentTokenId.current();
-        _safeMint(recipient, newItemId);
-        return newItemId;
-    }
-
-    function ownerTokens(address owner) public view returns (uint256[] memory) {
-        uint256 size = ERC721.balanceOf(owner);
-        uint256[] memory items = new uint256[](size);
-        for (uint256 i = 0; i < size; i++) {
-            items[i] = tokenOfOwnerByIndex(owner, i);
-        }
-        return items;
-    }
+    /**
+     * tokensOfOwner
+     */
+    // function ownerTokens(address owner) public view returns (uint256[] memory) {
+    //     return tokensOfOwner(owner);
+    // }
 
     /**
      * @dev Pauses all token transfers.
@@ -109,7 +99,11 @@ contract NFTERC721 is
     }
 
     function current() public view returns (uint256) {
-        return currentTokenId.current();
+        return _totalMinted();
+    }
+
+    function _startTokenId() internal pure override returns (uint256) {
+        return 1;
     }
 
     function contractURI() public view returns (string memory) {
@@ -144,19 +138,18 @@ contract NFTERC721 is
         public
         view
         virtual
-        override(AccessControl, ERC721, ERC721Enumerable)
+        override(AccessControl, ERC721A, IERC165)
         returns (bool)
     {
-        return
-            interfaceId == type(INFT).interfaceId ||
-            super.supportsInterface(interfaceId);
+        return super.supportsInterface(interfaceId);
     }
 
-    function _beforeTokenTransfer(
+    function _beforeTokenTransfers(
         address from,
         address to,
-        uint256 amount
-    ) internal virtual override(ERC721, ERC721Pausable, ERC721Enumerable) {
-        super._beforeTokenTransfer(from, to, amount);
+        uint256 startTokenId,
+        uint256 quantity
+    ) internal virtual override(ERC721A, ERC721APausable) {
+        super._beforeTokenTransfers(from, to, startTokenId, quantity);
     }
 }
