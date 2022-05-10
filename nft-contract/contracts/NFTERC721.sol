@@ -13,7 +13,6 @@ import "./NativeMetaTransaction.sol";
 import "./INFT.sol";
 
 contract NFTERC721 is
-    INFT,
     ERC721,
     ERC721Burnable,
     ERC721Pausable,
@@ -31,10 +30,11 @@ contract NFTERC721 is
     /// @dev Base token URI used as a prefix by tokenURI().
     string private baseTokenURI;
     string private collectionURI;
-    uint256 public constant TOTAL_SUPPLY = 10800;
 
-    constructor() ERC721("SONNY", "HM-SON") {
-        _initializeEIP712("SONNY");
+    // uint256 public constant TOTAL_SUPPLY = 10800;
+
+    constructor() ERC721("elephant", "ELT") {
+        _initializeEIP712("elephant");
         baseTokenURI = "https://cdn.nftstar.com/hm-son/metadata/";
         collectionURI = "https://cdn.nftstar.com/hm-son/meta-son-heung-min.json";
         // Grant the contract deployer the default admin role: it will be able to grant and revoke any roles
@@ -43,22 +43,17 @@ contract NFTERC721 is
         _setupRole(PAUSER_ROLE, msg.sender);
     }
 
-    function totalSupply() public pure override returns (uint256) {
-        return TOTAL_SUPPLY;
-    }
-
-    function remaining() public view override returns (uint256) {
-        return TOTAL_SUPPLY - currentTokenId.current();
+    function remaining() public view returns (uint256) {
+        return totalSupply() - currentTokenId.current();
     }
 
     function mintTo(address recipient)
         public
-        override
         onlyRole(MINER_ROLE)
         returns (uint256)
     {
-        uint256 tokenId = currentTokenId.current();
-        require(tokenId < TOTAL_SUPPLY, "Max supply reached");
+        // uint256 tokenId = currentTokenId.current();
+        // require(tokenId < TOTAL_SUPPLY, "Max supply reached");
         currentTokenId.increment();
         uint256 newItemId = currentTokenId.current();
         _safeMint(recipient, newItemId);
@@ -147,9 +142,7 @@ contract NFTERC721 is
         override(AccessControl, ERC721, ERC721Enumerable)
         returns (bool)
     {
-        return
-            interfaceId == type(INFT).interfaceId ||
-            super.supportsInterface(interfaceId);
+        return super.supportsInterface(interfaceId);
     }
 
     function _beforeTokenTransfer(

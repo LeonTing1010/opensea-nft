@@ -11,10 +11,15 @@ describe("NFT", function () {
     console.log("Contract = " + nft);
     const cnft = await getContract(nft, "NFTERC721", getAccount(), hre);
 
-    for (var i = 1; i <= 10800; i++) {
-      let address = await cnft.ownerOf(i);
-      console.log(i, address);
-      expect(address).to.be.not.equal("0x0000000000000000000000000000000000000000");
+    for (var i = 6077; i <= 10800; i++) {
+      address = "0x0000000000000000000000000000000000000000";
+      try {
+        address = await cnft.ownerOf(i);
+        console.log(i, address);
+      } catch (error) {
+        console.log(i);
+      }
+      expect(address).to.be.equal("0x0000000000000000000000000000000000000000");
     }
   });
 });
