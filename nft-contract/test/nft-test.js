@@ -1,42 +1,42 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
-const { getContract, getEnvVariable, getAccount, getBurnAccount, getProvider } = require("./helpers");
+// const { expect } = require("chai");
+// const { ethers } = require("hardhat");
+// const { getContract, getEnvVariable, getAccount, getBurnAccount, getProvider } = require("./helpers");
 
-describe("NFTERC721A-MINER", function () {
-  this.timeout(60000000000);
-  it("mintTo", async function () {
-    //setTimeout(done, 100000);
-    const nft = getEnvVariable("NFT_CONTRACT_ADDRESS");
-    console.log("Contract = " + nft);
-    const cnft = await getContract(nft, "NFTERC721A", getAccount(), hre);
-    // const miner = await getAccount().getAddress();
-    // console.log("Miner = " + miner);
-    current = await cnft.current();
-    console.log("current = " + current.toNumber());
-    // NONCE = 914;
-    while (current.toNumber() < 1100) {
-      // The gas price (in wei)...
-      gPrice = await getProvider().getGasPrice();
-      console.log("current = " + current.toNumber() + " gasPrice = " + gPrice);
-      // if (gPrice > 30000000000) {
-      //   continue;
-      // }
-      try {
-        // mintTx = await cnft.mintTo("0x8dedc1d825d082a9e8ff1ec4ea3661d6c6c6e5c1", 100, { nonce: NONCE });
-        // mintTx = await cnft.mintTo("0x8dedc1d825d082a9e8ff1ec4ea3661d6c6c6e5c1", { gasPrice: 16000000000, gasLimit: 3000000 });
-        // mintTx = await cnft.mintTo("0xC42d0b585855Bc74bd15691553f25B75251F2E79", 100, { gasPrice: gPrice, gasLimit: 3000000 });
-        mintTx = await cnft.mintTo("0xC42d0b585855Bc74bd15691553f25B75251F2E79", 100);
-        await mintTx.wait();
-      } catch (error) {
-        console.log(error.message);
-      } finally {
-        // NONCE = NONCE + 1;
-      }
-      current = await cnft.current();
-    }
-    // done();
-  });
-});
+// describe("NFTERC721A-MINER", function () {
+//   this.timeout(60000000000);
+//   it("mintTo", async function () {
+//     //setTimeout(done, 100000);
+//     const nft = getEnvVariable("NFT_CONTRACT_ADDRESS");
+//     console.log("Contract = " + nft);
+//     const cnft = await getContract(nft, "NFTERC721A", getAccount(), hre);
+//     // const miner = await getAccount().getAddress();
+//     // console.log("Miner = " + miner);
+//     current = await cnft.current();
+//     console.log("current = " + current.toNumber());
+//     // NONCE = 914;
+//     while (current.toNumber() < 1100) {
+//       // The gas price (in wei)...
+//       gPrice = await getProvider().getGasPrice();
+//       console.log("current = " + current.toNumber() + " gasPrice = " + gPrice);
+//       // if (gPrice > 30000000000) {
+//       //   continue;
+//       // }
+//       try {
+//         // mintTx = await cnft.mintTo("0x8dedc1d825d082a9e8ff1ec4ea3661d6c6c6e5c1", 100, { nonce: NONCE });
+//         // mintTx = await cnft.mintTo("0x8dedc1d825d082a9e8ff1ec4ea3661d6c6c6e5c1", { gasPrice: 16000000000, gasLimit: 3000000 });
+//         // mintTx = await cnft.mintTo("0xC42d0b585855Bc74bd15691553f25B75251F2E79", 100, { gasPrice: gPrice, gasLimit: 3000000 });
+//         mintTx = await cnft.mintTo("0xC42d0b585855Bc74bd15691553f25B75251F2E79", 100);
+//         await mintTx.wait();
+//       } catch (error) {
+//         console.log(error.message);
+//       } finally {
+//         // NONCE = NONCE + 1;
+//       }
+//       current = await cnft.current();
+//     }
+//     // done();
+//   });
+// });
 
 // describe("NFTERC721-BURNER", function () {
 //   this.timeout(60000000000);

@@ -9,8 +9,8 @@ import "erc721a/contracts/ERC721A.sol";
 import "erc721a/contracts/extensions/ERC721ABurnable.sol";
 import "erc721a/contracts/extensions/ERC721AQueryable.sol";
 import "erc721a/contracts/extensions/ERC721AOwnersExplicit.sol";
-import "./ContextMixin.sol";
-import "./NativeMetaTransaction.sol";
+import "../eip712/NativeMetaTransaction.sol";
+import "../eip712/ContextMixin.sol";
 import "./ERC721APausable.sol";
 
 contract NFTERC721A is
@@ -28,12 +28,12 @@ contract NFTERC721A is
     bytes32 public constant MINER_ROLE = keccak256("MINER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     // using Counters for Counters.Counter;
-    Counters.Counter private currentTokenId;
+    // Counters.Counter private currentTokenId;
     /// @dev Base token URI used as a prefix by tokenURI().
     string private baseTokenURI;
     string private collectionURI;
 
-    // uint256 public constant TOTAL_SUPPLY = 10800;
+    uint256 public constant TOTAL_SUPPLY = 10800;
 
     constructor() ERC721A("SONNY", "HM-SON") {
         _initializeEIP712("SONNY");
@@ -49,9 +49,9 @@ contract NFTERC721A is
     //     return TOTAL_SUPPLY;
     // }
 
-    // function remaining() public view override returns (uint256) {
-    //     return totalSupply() - currentTokenId.current();
-    // }
+    function remaining() public view returns (uint256) {
+        return TOTAL_SUPPLY - _totalMinted();
+    }
 
     function mintTo(address to, uint256 quantity) public onlyRole(MINER_ROLE) {
         _safeMint(to, quantity);
@@ -138,7 +138,7 @@ contract NFTERC721A is
         public
         view
         virtual
-        override(AccessControl, ERC721A, IERC165)
+        override(AccessControl, ERC721A)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);

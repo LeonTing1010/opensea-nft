@@ -6,15 +6,16 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "./INFT.sol";
+import "./eip712/EIP712Whitelisting.sol";
+import "./nft/NFTERC721A.sol";
 
-contract Crowdsale is PullPayment, Ownable, AccessControl {
+contract Crowdsale is EIP712Whitelisting, PullPayment, AccessControl {
     using SafeMath for uint256;
     // Create a new role identifier for the minter role
-    bytes32 public constant MINER_ROLE = keccak256("MINER_ROLE");
+    // bytes32 public constant MINER_ROLE = keccak256("MINER_ROLE");
     bytes32 public constant GIFT_ROLE = keccak256("GIFT_ROLE");
     address public collector; //
-    INFT public token;
+    NFTERC721A public token;
     bool public opening; // crowdsale opening status
     bool public closing; // crowdsale closing status
     uint256 public max = 10;
@@ -22,6 +23,7 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
     uint256 public publicSalePrice = 0.09 ether;
     uint256 public preSalePrice = 0.07 ether;
     uint256 public giftLimit = 300;
+    uint256 public TOTAL_SUPPLY = 10800;
 
     mapping(address => uint256) quotas;
     mapping(address => uint256) sold;
@@ -42,31 +44,34 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
         collector = msg.sender;
     }
 
-    function mint(uint256 _amount) external payable onlyPositive(_amount) {
-        require(opening, "Sales time has not started");
+    function preMint(uint256 _amount, bytes calldata signature)
+        external
+        payable
+        onlyPositive(_amount)
+        requiresWhitelist(signature)
+    {
+        require(opening, "PreSales time has not started");
         require(_amount <= limit, "More than one purchase");
-
+        require(msg.value == _amount.mul(preSalePrice), "Payment declined");
         address miner = msg.sender;
-        if (!closing) {
-            require(msg.value == _amount.mul(preSalePrice), "Payment declined");
-            require(hasRole(MINER_ROLE, miner), "Address not whitelisted");
-            sold[miner] = _amount.add(sold[miner]);
-            (bool ok, ) = quotas[miner].trySub(sold[miner]);
-            require(ok, "Exceeds Allocation");
-        } else {
-            require(
-                msg.value == _amount.mul(publicSalePrice),
-                "Payment declined"
-            );
-            sold[miner] = _amount.add(sold[miner]);
-            (bool ok, ) = max.trySub(sold[miner]);
-            require(ok, "Exceeded maximum quantity limit");
-        }
+        // require(hasRole(MINER_ROLE, miner), "Address not whitelisted");
+        sold[miner] = _amount.add(sold[miner]);
+        // (bool ok, ) = quotas[miner].trySub(sold[miner]);
+        // require(ok, "Exceeds Allocation");
         _asyncTransfer(collector, msg.value);
+        token.mintTo(miner, _amount);
+    }
 
-        for (uint256 index = 0; index < _amount; index++) {
-            token.mintTo(miner);
-        }
+    function pubMint(uint256 _amount) external payable onlyPositive(_amount) {
+        require(closing, "PubSales time has not started");
+        require(_amount <= limit, "More than one purchase");
+        require(msg.value == _amount.mul(publicSalePrice), "Payment declined");
+        address miner = msg.sender;
+        sold[miner] = _amount.add(sold[miner]);
+        // (bool ok, ) = max.trySub(sold[miner]);
+        // require(ok, "Exceeded maximum quantity limit");
+        _asyncTransfer(collector, msg.value);
+        token.mintTo(miner, _amount);
     }
 
     function grantLimits(address[] memory _accounts, uint256[] memory _limits)
@@ -81,7 +86,7 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
             address account = _accounts[index];
             require(_limits[index] <= max, "Exceeded maximum quantity limit");
             quotas[account] = _limits[index];
-            super.grantRole(MINER_ROLE, account);
+            //super.grantRole(MINER_ROLE, account);
         }
     }
 
@@ -91,7 +96,7 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
         require(ok, "Exceeded maximum gift limit");
         giftLimit = _giftLimit;
         for (uint256 c = 0; c < _accounts.length; c++) {
-            token.mintTo(_accounts[c]);
+            token.mintTo(_accounts[c], 1);
         }
     }
 
@@ -145,7 +150,8 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
 
     function setNft(address _nft) external onlyOwner {
         require(_nft != address(0), "invalid address");
-        token = INFT(_nft);
+        token = NFTERC721A(_nft);
+        token.grantRole(token.MINER_ROLE(), address(this));
     }
 
     function setOpening(bool _opening) external onlyOwner {
@@ -164,7 +170,7 @@ contract Crowdsale is PullPayment, Ownable, AccessControl {
     }
 
     function remaining() external view returns (uint256) {
-        return token.remaining();
+        return TOTAL_SUPPLY - token.current();
     }
 
     function transferRoleAdmin(address newDefaultAdmin)

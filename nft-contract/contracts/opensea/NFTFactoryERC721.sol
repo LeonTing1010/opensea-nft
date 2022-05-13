@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "./NFTERC721A.sol";
+import "../nft/NFTERC721A.sol";
 import "./NFTFactory.sol";
 import "./FactoryMintable.sol";
 import "./AllowsConfigurableProxy.sol";
