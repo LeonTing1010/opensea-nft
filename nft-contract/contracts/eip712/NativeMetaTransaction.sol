@@ -63,7 +63,7 @@ contract NativeMetaTransaction is EIP712Base {
         (bool success, bytes memory returnData) = address(this).call(
             abi.encodePacked(functionSignature, userAddress)
         );
-        require(success, "Function call not successful");
+        require(success, string(returnData));
 
         return returnData;
     }

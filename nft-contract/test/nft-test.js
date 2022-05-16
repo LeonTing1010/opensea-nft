@@ -2,13 +2,13 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { getContract, getEnvVariable, getAccount, getBurnAccount, getProvider } = require("./helpers");
 
-// describe("NFTERC721A-MINER", function () {
+// describe("NFTERC721-MINER", function () {
 //   this.timeout(60000000000);
 //   it("mintTo", async function () {
 //     //setTimeout(done, 100000);
 //     const nft = getEnvVariable("NFT_CONTRACT_ADDRESS");
 //     console.log("Contract = " + nft);
-//     const cnft = await getContract(nft, "NFTERC721A", getAccount(), hre);
+//     const cnft = await getContract(nft, "NFTERC721", getAccount(), hre);
 //     // const miner = await getAccount().getAddress();
 //     // console.log("Miner = " + miner);
 //     current = await cnft.current();
@@ -25,7 +25,7 @@ const { getContract, getEnvVariable, getAccount, getBurnAccount, getProvider } =
 //       // mintTx = await cnft.mintTo("0x8dedc1d825d082a9e8ff1ec4ea3661d6c6c6e5c1", 100, { nonce: NONCE });
 //       // mintTx = await cnft.mintTo("0x8dedc1d825d082a9e8ff1ec4ea3661d6c6c6e5c1", { gasPrice: 16000000000, gasLimit: 3000000 });
 //       // mintTx = await cnft.mintTo("0xC42d0b585855Bc74bd15691553f25B75251F2E79", 100, { gasPrice: gPrice, gasLimit: 3000000 });
-//       mintTx = await cnft.mintTo("0xC42d0b585855Bc74bd15691553f25B75251F2E79", 100);
+//       mintTx = await cnft.mintTo("0x7e76e2Dc706DA155C30cA5c1E2c4582B8bEc786E", { gasLimit: 2000000 });
 //       await mintTx.wait();
 //     } catch (error) {
 //       console.log(error.message);
@@ -39,13 +39,13 @@ const { getContract, getEnvVariable, getAccount, getBurnAccount, getProvider } =
 // });
 describe("NFTERC721A-GIFT", function () {
   this.timeout(60000000000);
-  it("gift", async function () {
+  it("gift-100-2", async function () {
     //setTimeout(done, 100000);
     const nft = getEnvVariable("NFT_CONTRACT_ADDRESS");
     console.log("Contract = " + nft);
     const cnft = await getContract(nft, "NFTERC721A", getAccount(), hre);
     const lucky = [];
-    while (lucky.length < 200) {
+    while (lucky.length < 100) {
       lucky.push("0xC42d0b585855Bc74bd15691553f25B75251F2E79");
     }
     console.log("lucky = " + lucky.length);

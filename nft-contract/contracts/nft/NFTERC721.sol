@@ -1,24 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Pausable.sol";
-import "erc721a/contracts/ERC721A.sol";
-import "erc721a/contracts/extensions/ERC721ABurnable.sol";
-import "erc721a/contracts/extensions/ERC721AQueryable.sol";
-import "erc721a/contracts/extensions/ERC721AOwnersExplicit.sol";
-import "../eip712/NativeMetaTransaction.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "../eip712/ContextMixin.sol";
-import "./ERC721APausable.sol";
+import "../eip712/NativeMetaTransaction.sol";
 
-contract NFTERC721A is
-    ERC721A,
-    ERC721ABurnable,
-    ERC721AQueryable,
-    ERC721AOwnersExplicit,
-    ERC721APausable,
+contract NFTERC721 is
+    ERC721,
+    ERC721Burnable,
+    ERC721Pausable,
+    ERC721Enumerable,
     AccessControl,
     Ownable,
     ContextMixin,
@@ -27,55 +24,52 @@ contract NFTERC721A is
     // Create a new role identifier for the minter role
     bytes32 public constant MINER_ROLE = keccak256("MINER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
-    // using Counters for Counters.Counter;
-    // Counters.Counter private currentTokenId;
+    using Counters for Counters.Counter;
+    Counters.Counter private currentTokenId;
     /// @dev Base token URI used as a prefix by tokenURI().
     string private baseTokenURI;
     string private collectionURI;
-
     uint256 public constant TOTAL_SUPPLY = 10800;
 
-    constructor() ERC721A("SONNY", "HM-SON") {
+    constructor() ERC721("SONNY", "HM-SON") {
         _initializeEIP712("SONNY");
         baseTokenURI = "https://cdn.nftstar.com/hm-son/metadata/";
         collectionURI = "https://cdn.nftstar.com/hm-son/meta-son-heung-min.json";
         // Grant the contract deployer the default admin role: it will be able to grant and revoke any roles
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _setupRole(MINER_ROLE, msg.sender);
-        _setupRole(PAUSER_ROLE, msg.sender);
+        _setupRole(DEFAULT_ADMIN_ROLE, msgSender());
+        _setupRole(MINER_ROLE, msgSender());
+        _setupRole(PAUSER_ROLE, msgSender());
     }
 
-    // function totalSupply() public view override returns (uint256) {
-    //     return TOTAL_SUPPLY;
-    // }
+    function totalSupply() public pure override returns (uint256) {
+        return TOTAL_SUPPLY;
+    }
 
     function remaining() public view returns (uint256) {
-        return TOTAL_SUPPLY - _totalMinted();
+        return TOTAL_SUPPLY - currentTokenId.current();
     }
 
-    function mintTo(address to) public onlyRole(MINER_ROLE) {
-        _safeMint(to, 1);
-    }
-
-    function mintTo(address to, uint256 quantity) public onlyRole(MINER_ROLE) {
-        _safeMint(to, quantity);
-    }
-
-    function gift(address[] memory _accounts, uint256 _amount)
-        external
+    function mintTo(address recipient)
+        public
         onlyRole(MINER_ROLE)
+        returns (uint256)
     {
-        for (uint256 c = 0; c < _accounts.length; c++) {
-            mintTo(_accounts[c], _amount);
-        }
+        uint256 tokenId = currentTokenId.current();
+        require(tokenId < TOTAL_SUPPLY, "Max supply reached");
+        currentTokenId.increment();
+        uint256 newItemId = currentTokenId.current();
+        _safeMint(recipient, newItemId);
+        return newItemId;
     }
 
-    /**
-     * tokensOfOwner
-     */
-    // function ownerTokens(address owner) public view returns (uint256[] memory) {
-    //     return tokensOfOwner(owner);
-    // }
+    function ownerTokens(address owner) public view returns (uint256[] memory) {
+        uint256 size = ERC721.balanceOf(owner);
+        uint256[] memory items = new uint256[](size);
+        for (uint256 i = 0; i < size; i++) {
+            items[i] = tokenOfOwnerByIndex(owner, i);
+        }
+        return items;
+    }
 
     /**
      * @dev Pauses all token transfers.
@@ -112,11 +106,7 @@ contract NFTERC721A is
     }
 
     function current() public view returns (uint256) {
-        return _totalMinted();
-    }
-
-    function _startTokenId() internal pure override returns (uint256) {
-        return 1;
+        return currentTokenId.current();
     }
 
     function contractURI() public view returns (string memory) {
@@ -151,18 +141,17 @@ contract NFTERC721A is
         public
         view
         virtual
-        override(AccessControl, ERC721A)
+        override(AccessControl, ERC721, ERC721Enumerable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
     }
 
-    function _beforeTokenTransfers(
+    function _beforeTokenTransfer(
         address from,
         address to,
-        uint256 startTokenId,
-        uint256 quantity
-    ) internal virtual override(ERC721A, ERC721APausable) {
-        super._beforeTokenTransfers(from, to, startTokenId, quantity);
+        uint256 amount
+    ) internal virtual override(ERC721, ERC721Pausable, ERC721Enumerable) {
+        super._beforeTokenTransfer(from, to, amount);
     }
 }
