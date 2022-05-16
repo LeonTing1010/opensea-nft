@@ -38,9 +38,9 @@ contract NFTERC721 is
         baseTokenURI = "https://cdn.nftstar.com/hm-son/metadata/";
         collectionURI = "https://cdn.nftstar.com/hm-son/meta-son-heung-min.json";
         // Grant the contract deployer the default admin role: it will be able to grant and revoke any roles
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _setupRole(MINER_ROLE, msg.sender);
-        _setupRole(PAUSER_ROLE, msg.sender);
+        _setupRole(DEFAULT_ADMIN_ROLE, msgSender());
+        _setupRole(MINER_ROLE, msgSender());
+        _setupRole(PAUSER_ROLE, msgSender());
     }
 
     function totalSupply() public pure override returns (uint256) {
