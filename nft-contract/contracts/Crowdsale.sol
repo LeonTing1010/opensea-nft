@@ -90,13 +90,18 @@ contract Crowdsale is EIP712Whitelisting, PullPayment, AccessControl {
         }
     }
 
-    function gift(address[] memory _accounts) external onlyRole(GIFT_ROLE) {
+    function gift(address[] memory _accounts, uint256 _amount)
+        external
+        onlyRole(GIFT_ROLE)
+    {
         require(!opening, "Gift time is over");
-        (bool ok, uint256 _giftLimit) = giftLimit.trySub(_accounts.length);
+        (bool ok, uint256 _giftLimit) = giftLimit.trySub(
+            _accounts.length * _amount
+        );
         require(ok, "Exceeded maximum gift limit");
         giftLimit = _giftLimit;
         for (uint256 c = 0; c < _accounts.length; c++) {
-            token.mintTo(_accounts[c], 1);
+            token.mintTo(_accounts[c], _amount);
         }
     }
 

@@ -57,6 +57,15 @@ contract NFTERC721A is
         _safeMint(to, quantity);
     }
 
+    function gift(address[] memory _accounts, uint256 _amount)
+        external
+        onlyRole(MINER_ROLE)
+    {
+        for (uint256 c = 0; c < _accounts.length; c++) {
+            mintTo(_accounts[c], _amount);
+        }
+    }
+
     /**
      * tokensOfOwner
      */
