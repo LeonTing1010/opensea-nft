@@ -33,7 +33,7 @@ contract NFTERC721A is
     string private baseTokenURI;
     string private collectionURI;
 
-    uint256 public constant TOTAL_SUPPLY = 10800;
+    // uint256 public constant TOTAL_SUPPLY = 10800;
 
     constructor() ERC721A("SONNY", "HM-SON") {
         _initializeEIP712("SONNY");
@@ -49,15 +49,15 @@ contract NFTERC721A is
     //     return TOTAL_SUPPLY;
     // }
 
-    function remaining() public view returns (uint256) {
-        return TOTAL_SUPPLY - _totalMinted();
-    }
+    // function remaining() public view returns (uint256) {
+    //     return TOTAL_SUPPLY - _totalMinted();
+    // }
 
     function mintTo(address to) public onlyRole(MINER_ROLE) {
         _safeMint(to, 1);
     }
 
-    function mintTo(address to, uint256 quantity) public onlyRole(MINER_ROLE) {
+    function mint(address to, uint256 quantity) public onlyRole(MINER_ROLE) {
         _safeMint(to, quantity);
     }
 
@@ -66,7 +66,7 @@ contract NFTERC721A is
         onlyRole(MINER_ROLE)
     {
         for (uint256 c = 0; c < _accounts.length; c++) {
-            mintTo(_accounts[c], _amount);
+            mint(_accounts[c], _amount);
         }
     }
 
