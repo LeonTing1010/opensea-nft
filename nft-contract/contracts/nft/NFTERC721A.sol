@@ -165,4 +165,14 @@ contract NFTERC721A is
     ) internal virtual override(ERC721A, ERC721APausable) {
         super._beforeTokenTransfers(from, to, startTokenId, quantity);
     }
+
+    function _msgSender()
+        internal
+        view
+        virtual
+        override
+        returns (address sender)
+    {
+        return ContextMixin.msgSender();
+    }
 }
