@@ -40,7 +40,7 @@ contract NFTFactoryERC721 is
         onlyFactory
         canMint(_optionId)
     {
-        mintTo(_to, _optionId);
+        mint(_to, _optionId);
     }
 
     function factoryCanMint(uint256 _optionId)
