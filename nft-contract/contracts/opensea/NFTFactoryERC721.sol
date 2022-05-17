@@ -65,4 +65,8 @@ contract NFTFactoryERC721 is
         }
         maxSupply = _maxSupply;
     }
+
+    function _msgSender() internal view override returns (address sender) {
+        return ContextMixin.msgSender();
+    }
 }
