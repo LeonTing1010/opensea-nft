@@ -37,6 +37,10 @@ module.exports = {
       url: `http://124.70.219.113:8545`,
       accounts: [`0x${ACCOUNT_PRIVATE_KEY}`],
     },
+    local: {
+      url: `http://127.0.0.1:8545/`,
+      accounts: [`0x${ACCOUNT_PRIVATE_KEY}`],
+    },
   },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
