@@ -36,9 +36,9 @@ contract NFTERC721 is
         baseTokenURI = "https://cdn.nftstar.com/hm-son/metadata/";
         collectionURI = "https://cdn.nftstar.com/hm-son/meta-son-heung-min.json";
         // Grant the contract deployer the default admin role: it will be able to grant and revoke any roles
-        _setupRole(DEFAULT_ADMIN_ROLE, msgSender());
-        _setupRole(MINER_ROLE, msgSender());
-        _setupRole(PAUSER_ROLE, msgSender());
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(MINER_ROLE, _msgSender());
+        _setupRole(PAUSER_ROLE, _msgSender());
     }
 
     function totalSupply() public pure override returns (uint256) {
@@ -82,7 +82,7 @@ contract NFTERC721 is
      */
     function pause() public virtual {
         require(
-            hasRole(PAUSER_ROLE, msgSender()),
+            hasRole(PAUSER_ROLE, _msgSender()),
             "NFT: must have pauser role to pause"
         );
         _pause();
@@ -99,7 +99,7 @@ contract NFTERC721 is
      */
     function unpause() public virtual {
         require(
-            hasRole(PAUSER_ROLE, msgSender()),
+            hasRole(PAUSER_ROLE, _msgSender()),
             "NFT: must have pauser role to unpause"
         );
         _unpause();
@@ -153,5 +153,15 @@ contract NFTERC721 is
         uint256 amount
     ) internal virtual override(ERC721, ERC721Pausable, ERC721Enumerable) {
         super._beforeTokenTransfer(from, to, amount);
+    }
+
+    function _msgSender()
+        internal
+        view
+        virtual
+        override
+        returns (address sender)
+    {
+        return ContextMixin.msgSender();
     }
 }

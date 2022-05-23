@@ -4,13 +4,18 @@ require("./scripts/deploy.js");
 require("./scripts/mint.js");
 require("./scripts/crowdsale.js");
 require("@nomiclabs/hardhat-etherscan");
-require("hardhat-gas-reporter");
+// require("hardhat-gas-reporter");
 
-const { INFURA_KEY, ACCOUNT_PRIVATE_KEY, ETHERSCAN_API_KEY, NETWORK } = process.env;
+const { INFURA_KEY, REPORT_GAS, ACCOUNT_PRIVATE_KEY, ETHERSCAN_API_KEY, NETWORK } = process.env;
 
 module.exports = {
   solidity: "0.8.7",
   defaultNetwork: NETWORK,
+  gasReporter: {
+    enabled: REPORT_GAS,
+    currency: "USD",
+    gasPrice: 1000000000,
+  },
   networks: {
     hardhat: {},
     ropsten: {

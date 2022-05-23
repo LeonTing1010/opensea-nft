@@ -6,10 +6,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "./eip712/EIP712Whitelisting.sol";
+import "./eip712/EIP712Sign.sol";
 import "./nft/NFTERC721A.sol";
 
-contract Crowdsale is EIP712Whitelisting, PullPayment, AccessControl {
+contract Crowdsale is EIP712Sign, PullPayment, AccessControl {
     using SafeMath for uint256;
     // Create a new role identifier for the minter role
     // bytes32 public constant MINER_ROLE = keccak256("MINER_ROLE");
@@ -59,7 +59,7 @@ contract Crowdsale is EIP712Whitelisting, PullPayment, AccessControl {
         // (bool ok, ) = quotas[miner].trySub(sold[miner]);
         // require(ok, "Exceeds Allocation");
         _asyncTransfer(collector, msg.value);
-        token.mintTo(miner, _amount);
+        token.mint(miner, _amount);
     }
 
     function pubMint(uint256 _amount) external payable onlyPositive(_amount) {
@@ -71,7 +71,7 @@ contract Crowdsale is EIP712Whitelisting, PullPayment, AccessControl {
         // (bool ok, ) = max.trySub(sold[miner]);
         // require(ok, "Exceeded maximum quantity limit");
         _asyncTransfer(collector, msg.value);
-        token.mintTo(miner, _amount);
+        token.mint(miner, _amount);
     }
 
     function grantLimits(address[] memory _accounts, uint256[] memory _limits)
@@ -101,7 +101,7 @@ contract Crowdsale is EIP712Whitelisting, PullPayment, AccessControl {
         require(ok, "Exceeded maximum gift limit");
         giftLimit = _giftLimit;
         for (uint256 c = 0; c < _accounts.length; c++) {
-            token.mintTo(_accounts[c], _amount);
+            token.mint(_accounts[c], _amount);
         }
     }
 
@@ -156,7 +156,6 @@ contract Crowdsale is EIP712Whitelisting, PullPayment, AccessControl {
     function setNft(address _nft) external onlyOwner {
         require(_nft != address(0), "invalid address");
         token = NFTERC721A(_nft);
-        token.grantRole(token.MINER_ROLE(), address(this));
     }
 
     function setOpening(bool _opening) external onlyOwner {

@@ -4,7 +4,7 @@ pragma solidity ^0.8.7;
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract EIP712Whitelisting is Ownable {
+contract EIP712Sign is Ownable {
     using ECDSA for bytes32;
 
     // The key used to sign whitelist signatures.
