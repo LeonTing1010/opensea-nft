@@ -23,7 +23,7 @@ contract Crowdsale is EIP712Sign, PullPayment, AccessControl {
     uint256 public publicSalePrice = 0.09 ether;
     uint256 public preSalePrice = 0.07 ether;
     uint256 public giftLimit = 300;
-    uint256 public TOTAL_SUPPLY = 10800;
+    uint256 public TOTAL_SUPPLY = 777;
 
     mapping(address => uint256) quotas;
     mapping(address => uint256) sold;
@@ -53,6 +53,7 @@ contract Crowdsale is EIP712Sign, PullPayment, AccessControl {
         require(opening, "PreSales time has not started");
         require(_amount <= limit, "More than one purchase");
         require(msg.value == _amount.mul(preSalePrice), "Payment declined");
+        require(token.current() <= TOTAL_SUPPLY, "Exceeded total supply");
         address miner = msg.sender;
         // require(hasRole(MINER_ROLE, miner), "Address not whitelisted");
         sold[miner] = _amount.add(sold[miner]);
@@ -66,6 +67,7 @@ contract Crowdsale is EIP712Sign, PullPayment, AccessControl {
         require(closing, "PubSales time has not started");
         require(_amount <= limit, "More than one purchase");
         require(msg.value == _amount.mul(publicSalePrice), "Payment declined");
+        require(token.current() <= TOTAL_SUPPLY, "Exceeded total supply");
         address miner = msg.sender;
         sold[miner] = _amount.add(sold[miner]);
         // (bool ok, ) = max.trySub(sold[miner]);
