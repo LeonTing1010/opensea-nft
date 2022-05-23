@@ -35,9 +35,9 @@ contract NFTERC721A is
 
     // uint256 public constant TOTAL_SUPPLY = 10800;
 
-    constructor() ERC721A("SONNY", "HM-SON") {
-        _initializeEIP712("SONNY");
-        baseTokenURI = "https://cdn.nftstar.com/hm-son/metadata/";
+    constructor() ERC721A("METAGOAL", "MGOAL") {
+        _initializeEIP712("METAGOAL");
+        baseTokenURI = "http://cdn.nftstar.com/hm-son/metadata/";
         collectionURI = "https://cdn.nftstar.com/hm-son/meta-son-heung-min.json";
         // Grant the contract deployer the default admin role: it will be able to grant and revoke any roles
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
@@ -60,15 +60,6 @@ contract NFTERC721A is
     function mint(address to, uint256 quantity) public onlyRole(MINER_ROLE) {
         _safeMint(to, quantity);
     }
-
-    // function gift(address[] memory _accounts, uint256 _amount)
-    //     external
-    //     onlyRole(MINER_ROLE)
-    // {
-    //     for (uint256 c = 0; c < _accounts.length; c++) {
-    //         mint(_accounts[c], _amount);
-    //     }
-    // }
 
     /**
      * tokensOfOwner
