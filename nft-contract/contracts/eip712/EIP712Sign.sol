@@ -11,6 +11,7 @@ contract EIP712Sign is Ownable {
     // We will check to ensure that the key that signed the signature
     // is this one that we expect.
     address whitelistSigningKey = address(0);
+    address giftSigningKey = address(0);
 
     // Domain Separator is the EIP-712 defined structure that defines what contract
     // and chain these signatures can be used for.  This ensures people can't take
@@ -26,6 +27,7 @@ contract EIP712Sign is Ownable {
     // https://github.com/msfeldstein/EIP712-whitelisting/blob/main/test/signWhitelist.ts#L22
     bytes32 public constant MINTER_TYPEHASH =
         keccak256("Minter(address wallet)");
+    bytes32 public constant GIFT_TYPEHASH = keccak256("Gift(address wallet)");
 
     constructor() {
         // This should match whats in the client side whitelist signing code
@@ -44,6 +46,10 @@ contract EIP712Sign is Ownable {
         );
     }
 
+    function setGiftSigningAddress(address newSigningKey) public onlyOwner {
+        giftSigningKey = newSigningKey;
+    }
+
     function setWhitelistSigningAddress(address newSigningKey)
         public
         onlyOwner
@@ -53,6 +59,23 @@ contract EIP712Sign is Ownable {
 
     modifier requiresWhitelist(bytes calldata signature) {
         require(whitelistSigningKey != address(0), "whitelist not enabled");
+        address recoveredAddress = recoverSigner(MINTER_TYPEHASH, signature);
+        require(recoveredAddress == whitelistSigningKey, "Invalid Signature");
+        _;
+    }
+
+    modifier requiresGift(bytes calldata signature) {
+        require(giftSigningKey != address(0), "gift not enabled");
+        address recoveredAddress = recoverSigner(GIFT_TYPEHASH, signature);
+        require(recoveredAddress == giftSigningKey, "Invalid Signature");
+        _;
+    }
+
+    function recoverSigner(bytes32 typehash, bytes calldata signature)
+        internal
+        view
+        returns (address)
+    {
         // Verify EIP-712 signature by recreating the data structure
         // that we signed on the client side, and then using that to recover
         // the address that signed the signature for this data.
@@ -60,15 +83,13 @@ contract EIP712Sign is Ownable {
             abi.encodePacked(
                 "\x19\x01",
                 DOMAIN_SEPARATOR,
-                keccak256(abi.encode(MINTER_TYPEHASH, msg.sender))
+                keccak256(abi.encode(typehash, msg.sender))
             )
         );
         // Use the recover method to see what address was used to create
         // the signature on this data.
         // Note that if the digest doesn't exactly match what was signed we'll
         // get a random recovered address.
-        address recoveredAddress = digest.recover(signature);
-        require(recoveredAddress == whitelistSigningKey, "Invalid Signature");
-        _;
+        return digest.recover(signature);
     }
 }

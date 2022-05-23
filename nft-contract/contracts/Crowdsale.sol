@@ -13,7 +13,7 @@ contract Crowdsale is EIP712Sign, PullPayment, AccessControl {
     using SafeMath for uint256;
     // Create a new role identifier for the minter role
     // bytes32 public constant MINER_ROLE = keccak256("MINER_ROLE");
-    bytes32 public constant GIFT_ROLE = keccak256("GIFT_ROLE");
+    // bytes32 public constant GIFT_ROLE = keccak256("GIFT_ROLE");
     address public collector; //
     NFTERC721A public token;
     bool public opening; // crowdsale opening status
@@ -27,6 +27,7 @@ contract Crowdsale is EIP712Sign, PullPayment, AccessControl {
 
     mapping(address => uint256) quotas;
     mapping(address => uint256) sold;
+    mapping(address => uint256) free;
 
     event PublicSalePriceChanged(uint256 price);
     event PreSalePriceChanged(uint256 price);
@@ -92,19 +93,20 @@ contract Crowdsale is EIP712Sign, PullPayment, AccessControl {
         }
     }
 
-    function gift(address[] memory _accounts, uint256 _amount)
+    function gift(uint256 _amount, bytes calldata signature)
         external
-        onlyRole(GIFT_ROLE)
+        requiresGift(signature)
     {
         require(!opening, "Gift time is over");
-        (bool ok, uint256 _giftLimit) = giftLimit.trySub(
-            _accounts.length * _amount
-        );
-        require(ok, "Exceeded maximum gift limit");
-        giftLimit = _giftLimit;
-        for (uint256 c = 0; c < _accounts.length; c++) {
-            token.mint(_accounts[c], _amount);
-        }
+        require(_amount <= limit, "More than one purchase");
+        address miner = msg.sender;
+        free[miner] = _amount.add(free[miner]);
+        require(free[miner] <= max, "Exceeded maximum quantity limit");
+        token.mint(miner, _amount);
+    }
+
+    function freeMinted(address _account) public view returns (uint256) {
+        return free[_account];
     }
 
     function allowance(address _account) public view returns (uint256) {
