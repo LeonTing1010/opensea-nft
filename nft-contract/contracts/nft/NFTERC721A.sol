@@ -34,12 +34,12 @@ contract NFTERC721A is
     string private baseTokenURI;
     string private collectionURI;
 
-    uint256 public constant TOTAL_SUPPLY = 40000;
+    uint256 public constant TOTAL_SUPPLY = 500;
 
-    constructor() ERC721A("Happy Hour Pass", "HAPPY-HOUR-PASS") {
-        _initializeEIP712("Happy Hour Pass");
-        baseTokenURI = "https://cdn.nftstar.com/happy-hour-pass/metadata/";
-        collectionURI = "https://cdn.nftstar.com/happy-hour-pass/metadata/";
+    constructor() ERC721A("Genius Pass", "GENIUS-PASS") {
+        _initializeEIP712("Genius Pass");
+        baseTokenURI = "http://cdn.nftstar.com/genius-pass/metadata/";
+        collectionURI = "http://cdn.nftstar.com/genius-pass/metadata/";
         // Grant the contract deployer the default admin role: it will be able to grant and revoke any roles
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(MINER_ROLE, _msgSender());
