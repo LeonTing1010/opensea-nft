@@ -32,7 +32,7 @@ describe("Token", function () {
 
   it("Should allow minting with whitelist enabled if a valid signature is sent", async function () {
     let { chainId } = await ethers.provider.getNetwork();
-    const address = ["0x5cE7Ce18B65e193d0DfF3F9e72B65A67eE84E455", "0x30a9A5cCEBBCd60cd83585b4f84bA0F988ad7D66", "0xbAbd162A3922d693FbF315900098DA46a87BF12D"];
+    const address = [mintingKey.address, "0x5cE7Ce18B65e193d0DfF3F9e72B65A67eE84E455", "0x30a9A5cCEBBCd60cd83585b4f84bA0F988ad7D66", "0xbAbd162A3922d693FbF315900098DA46a87BF12D"];
     for (var i = 0; i < address.length; i++) {
       let signature = await signWhitelist(chainId, contract.address, whitelistKey, address[i]);
       console.log("Address = " + address[i] + " Sig = " + signature);
