@@ -21,7 +21,7 @@ describe("Token", function () {
     salesAddress = getEnvVariable("SALES_CONTRACT_ADDRESS");
     console.log("Contract = " + salesAddress);
     contract = await getContract(salesAddress, "Crowdsale", getAccount(), hre);
-    // await contract.setGiftSigningAddress(whitelistKey.address);
+    // await contract.setWhitelistSigningAddress(whitelistKey.address);
     // await contract.setOpening(true);
 
     // let nftAddress = getEnvVariable("NFT_CONTRACT_ADDRESS");
@@ -30,51 +30,55 @@ describe("Token", function () {
     // await contract.setNft(nftAddress);
   });
 
-  //   it("Should allow minting with whitelist enabled if a valid signature is sent", async function () {
-  //     let { chainId } = await ethers.provider.getNetwork();
-  //     const sig = signWhitelist(chainId, contract.address, whitelistKey, mintingKey.address);
-  //     console.log("Sig = " + (await sig));
-  //     let price = ethers.BigNumber.from("70000000000000000");
+  it("Should allow minting with whitelist enabled if a valid signature is sent", async function () {
+    let { chainId } = await ethers.provider.getNetwork();
+    const address = ["0x5cE7Ce18B65e193d0DfF3F9e72B65A67eE84E455", "0x30a9A5cCEBBCd60cd83585b4f84bA0F988ad7D66", "0xbAbd162A3922d693FbF315900098DA46a87BF12D"];
+    for (var i = 0; i < address.length; i++) {
+      let signature = await signWhitelist(chainId, contract.address, whitelistKey, address[i]);
+      console.log("Address = " + address[i] + " Sig = " + signature);
+    }
+
+    // let price = ethers.BigNumber.from("70000000000000000");
+    // await contract.preMint(1, sig, {
+    //   gasLimit: 3_000_000,
+    //   value: price,
+    // });
+  });
+
+  // it("Should not allow minting with whitelist enabled if a different signature is sent", async function () {
+  //   // const contract = await getContract(salesAddress, "Crowdsale", getAccount(), hre);
+  //   let { chainId } = await ethers.provider.getNetwork();
+  //   const sig = signWhitelist(chainId, contract.address, maliciousKey, mintingKey.address);
+  //   let price = ethers.BigNumber.from("70000000000000000");
+  //   try {
   //     await contract.preMint(1, sig, {
   //       gasLimit: 3_000_000,
   //       value: price,
   //     });
+  //   } catch (e) {
+  //     console.log("msg:" + e.message);
+  //   }
+  // });
+
+  // it("Should allow gift if a valid signature is sent", async function () {
+  //   let { chainId } = await ethers.provider.getNetwork();
+  //   const sig = signGiftlist(chainId, contract.address, whitelistKey, mintingKey.address);
+  //   console.log("Sig = " + (await sig));
+  //   await contract.gift(1, sig, {
+  //     gasLimit: 3_000_000,
   //   });
+  // });
 
-  //   it("Should not allow minting with whitelist enabled if a different signature is sent", async function () {
-  //     // const contract = await getContract(salesAddress, "Crowdsale", getAccount(), hre);
-  //     let { chainId } = await ethers.provider.getNetwork();
-  //     const sig = signWhitelist(chainId, contract.address, maliciousKey, mintingKey.address);
-  //     let price = ethers.BigNumber.from("70000000000000000");
-  //     try {
-  //       await contract.preMint(1, sig, {
-  //         gasLimit: 3_000_000,
-  //         value: price,
-  //       });
-  //     } catch (e) {
-  //       console.log("msg:" + e.message);
-  //     }
-  //   });
-
-  it("Should allow gift if a valid signature is sent", async function () {
-    let { chainId } = await ethers.provider.getNetwork();
-    const sig = signGiftlist(chainId, contract.address, whitelistKey, mintingKey.address);
-    console.log("Sig = " + (await sig));
-    await contract.gift(1, sig, {
-      gasLimit: 3_000_000,
-    });
-  });
-
-  it("Should not allow gift  if a different signature is sent", async function () {
-    // const contract = await getContract(salesAddress, "Crowdsale", getAccount(), hre);
-    let { chainId } = await ethers.provider.getNetwork();
-    const sig = signGiftlist(chainId, contract.address, maliciousKey, mintingKey.address);
-    try {
-      await contract.gift(1, sig, {
-        gasLimit: 3_000_000,
-      });
-    } catch (e) {
-      console.log("msg:" + e.message);
-    }
-  });
+  // it("Should not allow gift  if a different signature is sent", async function () {
+  //   // const contract = await getContract(salesAddress, "Crowdsale", getAccount(), hre);
+  //   let { chainId } = await ethers.provider.getNetwork();
+  //   const sig = signGiftlist(chainId, contract.address, maliciousKey, mintingKey.address);
+  //   try {
+  //     await contract.gift(1, sig, {
+  //       gasLimit: 3_000_000,
+  //     });
+  //   } catch (e) {
+  //     console.log("msg:" + e.message);
+  //   }
+  // });
 });
