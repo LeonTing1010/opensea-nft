@@ -27,22 +27,24 @@ contract NFTERC721A is
     // Create a new role identifier for the minter role
     bytes32 public constant MINER_ROLE = keccak256("MINER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+    bytes32 public constant GIFT_ROLE = keccak256("GIFT_ROLE");
     // using Counters for Counters.Counter;
     // Counters.Counter private currentTokenId;
     /// @dev Base token URI used as a prefix by tokenURI().
     string private baseTokenURI;
     string private collectionURI;
 
-    // uint256 public constant TOTAL_SUPPLY = 10800;
+    uint256 public constant TOTAL_SUPPLY = 40000;
 
-    constructor() ERC721A("SONNY-BOOT", "HM-SON-BOOT") {
-        _initializeEIP712("SONNY-BOOT");
-        baseTokenURI = "https://cdn.nftstar.com/hm-son-boot/metadata/";
-        collectionURI = "https://cdn.nftstar.com/hm-son/meta-son-heung-min.json";
+    constructor() ERC721A("Happy Hour Pass", "HAPPY-HOUR-PASS") {
+        _initializeEIP712("Happy Hour Pass");
+        baseTokenURI = "https://cdn.nftstar.com/happy-hour-pass/metadata/";
+        collectionURI = "https://cdn.nftstar.com/happy-hour-pass/metadata/";
         // Grant the contract deployer the default admin role: it will be able to grant and revoke any roles
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(MINER_ROLE, _msgSender());
         _setupRole(PAUSER_ROLE, _msgSender());
+        _setupRole(GIFT_ROLE, _msgSender());
     }
 
     // function totalSupply() public view override returns (uint256) {
@@ -52,12 +54,29 @@ contract NFTERC721A is
     // function remaining() public view returns (uint256) {
     //     return TOTAL_SUPPLY - _totalMinted();
     // }
+    function gift(address[] calldata _accounts, uint256 quantity)
+        external
+        onlyRole(GIFT_ROLE)
+    {
+        require(
+            _accounts.length * quantity + _totalMinted() <= TOTAL_SUPPLY,
+            "Exceeded total supply"
+        );
+        for (uint256 index = 0; index < _accounts.length; index++) {
+            _safeMint(_accounts[index], quantity);
+        }
+    }
 
     function mintTo(address to) public onlyRole(MINER_ROLE) {
+        require(_totalMinted() + 1 <= TOTAL_SUPPLY, "Exceeded total supply");
         _safeMint(to, 1);
     }
 
     function mint(address to, uint256 quantity) public onlyRole(MINER_ROLE) {
+        require(
+            _totalMinted() + quantity <= TOTAL_SUPPLY,
+            "Exceeded total supply"
+        );
         _safeMint(to, quantity);
     }
 
