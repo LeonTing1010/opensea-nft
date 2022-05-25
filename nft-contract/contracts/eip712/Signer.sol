@@ -4,7 +4,7 @@ pragma solidity ^0.8.7;
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract GiftSigner is Ownable {
+contract Signer is Ownable {
     using ECDSA for bytes32;
 
     // The key used to sign whitelist signatures.
@@ -43,12 +43,12 @@ contract GiftSigner is Ownable {
         );
     }
 
-    function setGiftSigningAddress(address newSigningKey) public onlyOwner {
+    function setSigningKey(address newSigningKey) public onlyOwner {
         giftSigningKey = newSigningKey;
     }
 
     modifier requiresSignature(bytes calldata signature) {
-        require(giftSigningKey != address(0), "gift not enabled");
+        require(giftSigningKey != address(0), "Signing not enabled");
         address recoveredAddress = recoverSigner(GIFT_TYPEHASH, signature);
         require(recoveredAddress == giftSigningKey, "Invalid Signature");
         _;

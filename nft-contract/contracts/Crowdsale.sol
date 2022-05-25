@@ -1,15 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
-
-import "@openzeppelin/contracts/security/PullPayment.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "./eip712/GiftEIP712Signer.sol";
+import "./eip712/Signer.sol";
 import "./nft/NFTERC721A.sol";
 
-contract Crowdsale is GiftSigner {
+contract Crowdsale is Signer {
     using SafeMath for uint256;
 
     NFTERC721A public token;
@@ -20,15 +15,15 @@ contract Crowdsale is GiftSigner {
 
     event FreeMintingStarted(bool opening);
 
-    constructor() GiftSigner("SONNY-BOOT") {}
+    constructor() Signer("SONNY-BOOT") {}
 
     function mint(bytes calldata signature)
         external
         requiresSignature(signature)
     {
-        require(!opening, "Free mining has not yet begun");
+        require(opening, "Free mining has not yet begun");
         address miner = msg.sender;
-        require(free[miner], "Already mined");
+        require(!free[miner], "Already mined");
         require(token.current() <= TOTAL_SUPPLY, "Exceeded maximum supply");
         free[miner] = true;
         token.mint(miner, 1);

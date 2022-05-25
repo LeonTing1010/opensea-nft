@@ -21,11 +21,11 @@ async function signWhitelist(chainId, contractAddress, whitelistKey, mintingAddr
   return sig;
 }
 
-async function signGiftlist(chainId, contractAddress, giftKey, mintingAddress) {
+async function signGiftlist(name, chainId, contractAddress, giftKey, mintingAddress) {
   // Domain data should match whats specified in the DOMAIN_SEPARATOR constructed in the contract
   // https://github.com/msfeldstein/EIP712-whitelisting/blob/main/contracts/EIP712Whitelisting.sol#L33-L43
   const domain = {
-    name: "NFTERC721A",
+    name: name,
     version: "1",
     chainId,
     verifyingContract: contractAddress,
