@@ -33,7 +33,7 @@ contract NFTERC721A is
     string private baseTokenURI;
     string private collectionURI;
 
-    uint256 public constant TOTAL_SUPPLY = 500;
+    uint256 public constant TOTAL_SUPPLY = 10000;
 
     constructor() ERC721A("Genius Pass", "GENIUS-PASS") {
         _initializeEIP712("Genius Pass");
