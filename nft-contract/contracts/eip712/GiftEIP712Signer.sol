@@ -4,13 +4,12 @@ pragma solidity ^0.8.7;
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract EIP712Sign is Ownable {
+contract GiftEIP712Signer is Ownable {
     using ECDSA for bytes32;
 
     // The key used to sign whitelist signatures.
     // We will check to ensure that the key that signed the signature
     // is this one that we expect.
-    address whitelistSigningKey = address(0);
     address giftSigningKey = address(0);
 
     // Domain Separator is the EIP-712 defined structure that defines what contract
@@ -25,11 +24,9 @@ contract EIP712Sign is Ownable {
     // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md#rationale-for-typehash
     // This should match whats in the client side whitelist signing code
     // https://github.com/msfeldstein/EIP712-whitelisting/blob/main/test/signWhitelist.ts#L22
-    bytes32 public constant MINTER_TYPEHASH =
-        keccak256("Minter(address wallet)");
     bytes32 public constant GIFT_TYPEHASH = keccak256("Gift(address wallet)");
 
-    constructor() {
+    constructor(string memory name) {
         // This should match whats in the client side whitelist signing code
         // https://github.com/msfeldstein/EIP712-whitelisting/blob/main/test/signWhitelist.ts#L12
         DOMAIN_SEPARATOR = keccak256(
@@ -38,7 +35,7 @@ contract EIP712Sign is Ownable {
                     "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
                 ),
                 // This should match the domain you set in your client side signing.
-                keccak256(bytes("NFTERC721A")),
+                keccak256(bytes(name)),
                 keccak256(bytes("1")),
                 block.chainid,
                 address(this)
@@ -50,21 +47,7 @@ contract EIP712Sign is Ownable {
         giftSigningKey = newSigningKey;
     }
 
-    function setWhitelistSigningAddress(address newSigningKey)
-        public
-        onlyOwner
-    {
-        whitelistSigningKey = newSigningKey;
-    }
-
-    modifier requiresWhitelist(bytes calldata signature) {
-        require(whitelistSigningKey != address(0), "whitelist not enabled");
-        address recoveredAddress = recoverSigner(MINTER_TYPEHASH, signature);
-        require(recoveredAddress == whitelistSigningKey, "Invalid Signature");
-        _;
-    }
-
-    modifier requiresGift(bytes calldata signature) {
+    modifier requiresSignature(bytes calldata signature) {
         require(giftSigningKey != address(0), "gift not enabled");
         address recoveredAddress = recoverSigner(GIFT_TYPEHASH, signature);
         require(recoveredAddress == giftSigningKey, "Invalid Signature");
