@@ -27,13 +27,9 @@ contract NFTERC721A is
     bytes32 public constant MINER_ROLE = keccak256("MINER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant GIFT_ROLE = keccak256("GIFT_ROLE");
-    // using Counters for Counters.Counter;
-    // Counters.Counter private currentTokenId;
     /// @dev Base token URI used as a prefix by tokenURI().
     string private baseTokenURI;
     string private collectionURI;
-
-    uint256 public constant TOTAL_SUPPLY = 40000;
 
     constructor() ERC721A("Happy Hour Pass", "HAPPY-HOUR-PASS") {
         _initializeEIP712("Happy Hour Pass");
@@ -46,45 +42,22 @@ contract NFTERC721A is
         _setupRole(GIFT_ROLE, _msgSender());
     }
 
-    // function totalSupply() public view override returns (uint256) {
-    //     return TOTAL_SUPPLY;
-    // }
-
-    // function remaining() public view returns (uint256) {
-    //     return TOTAL_SUPPLY - _totalMinted();
-    // }
     function gift(address[] calldata _accounts, uint256 quantity)
         external
         onlyRole(GIFT_ROLE)
     {
-        require(
-            _accounts.length * quantity + _totalMinted() <= TOTAL_SUPPLY,
-            "Exceeded total supply"
-        );
         for (uint256 index = 0; index < _accounts.length; index++) {
             _safeMint(_accounts[index], quantity);
         }
     }
 
     function mintTo(address to) public onlyRole(MINER_ROLE) {
-        require(_totalMinted() + 1 <= TOTAL_SUPPLY, "Exceeded total supply");
         _safeMint(to, 1);
     }
 
     function mint(address to, uint256 quantity) public onlyRole(MINER_ROLE) {
-        require(
-            _totalMinted() + quantity <= TOTAL_SUPPLY,
-            "Exceeded total supply"
-        );
         _safeMint(to, quantity);
     }
-
-    /**
-     * tokensOfOwner
-     */
-    // function ownerTokens(address owner) public view returns (uint256[] memory) {
-    //     return tokensOfOwner(owner);
-    // }
 
     /**
      * @dev Pauses all token transfers.
