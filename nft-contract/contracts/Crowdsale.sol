@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./eip712/GiftEIP712Signer.sol";
 import "./nft/NFTERC721A.sol";
 
-contract Crowdsale is GiftEIP712Signer {
+contract Crowdsale is GiftSigner {
     using SafeMath for uint256;
 
     NFTERC721A public token;
@@ -20,7 +20,7 @@ contract Crowdsale is GiftEIP712Signer {
 
     event FreeMintingStarted(bool opening);
 
-    constructor() GiftEIP712Signer("SONNY-BOOT") {}
+    constructor() GiftSigner("SONNY-BOOT") {}
 
     function mint(bytes calldata signature)
         external
