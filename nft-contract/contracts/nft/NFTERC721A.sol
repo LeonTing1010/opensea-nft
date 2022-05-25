@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Pausable.sol";
 import "erc721a/contracts/ERC721A.sol";
 import "erc721a/contracts/extensions/ERC721ABurnable.sol";
 import "erc721a/contracts/extensions/ERC721AQueryable.sol";
-import "erc721a/contracts/extensions/ERC721AOwnersExplicit.sol";
+
 import "../eip712/NativeMetaTransaction.sol";
 import "../eip712/ContextMixin.sol";
 import "./ERC721APausable.sol";
@@ -17,7 +17,6 @@ contract NFTERC721A is
     ERC721A,
     ERC721ABurnable,
     ERC721AQueryable,
-    ERC721AOwnersExplicit,
     ERC721APausable,
     AccessControl,
     Ownable,
@@ -38,8 +37,8 @@ contract NFTERC721A is
 
     constructor() ERC721A("Genius Pass", "GENIUS-PASS") {
         _initializeEIP712("Genius Pass");
-        baseTokenURI = "http://cdn.nftstar.com/genius-pass/metadata/";
-        collectionURI = "http://cdn.nftstar.com/genius-pass/metadata/";
+        baseTokenURI = "https://cdn.nftstar.com/genius-pass/metadata/";
+        collectionURI = "https://cdn.nftstar.com/genius-pass/metadata/";
         // Grant the contract deployer the default admin role: it will be able to grant and revoke any roles
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(MINER_ROLE, _msgSender());
