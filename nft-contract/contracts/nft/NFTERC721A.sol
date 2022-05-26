@@ -43,7 +43,7 @@ contract NFTERC721A is
         _setupRole(PAUSER_ROLE, _msgSender());
     }
 
-    // function totalSupply() public view override returns (uint256) {
+    // function totalSupply() public view returns (uint256) {
     //     return TOTAL_SUPPLY;
     // }
 

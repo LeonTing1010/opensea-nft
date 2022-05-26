@@ -61,8 +61,8 @@ describe("FreeMint-EIP712-2", function () {
   // });
 
   it("Should allow gift if a valid signature is sent", async function () {
-    await contract.setGiftSigningAddress(whitelistKey.address);
-    await contract.setOpening(true);
+    // await contract.setSigningKey(whitelistKey.address);
+    // await contract.setOpening(true);
     let { chainId } = await ethers.provider.getNetwork();
     const sig = signGiftlist("SONNY-BOOT", chainId, contract.address, whitelistKey, mintingKey.address);
     console.log("signature = " + (await sig));
