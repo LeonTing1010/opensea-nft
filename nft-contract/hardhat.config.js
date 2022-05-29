@@ -4,7 +4,7 @@ require("./scripts/deploy.js");
 require("./scripts/mint.js");
 require("./scripts/crowdsale.js");
 require("@nomiclabs/hardhat-etherscan");
-require("hardhat-gas-reporter");
+// require("hardhat-gas-reporter");
 
 const { INFURA_KEY, REPORT_GAS, ACCOUNT_PRIVATE_KEY, ETHERSCAN_API_KEY, NETWORK } = process.env;
 

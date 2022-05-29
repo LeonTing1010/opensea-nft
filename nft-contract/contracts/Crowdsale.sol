@@ -33,4 +33,8 @@ contract Crowdsale is Signer {
         opening = _opening;
         emit FreeMintingStarted(opening);
     }
+
+    function current() external view returns (uint256) {
+        return token.current();
+    }
 }

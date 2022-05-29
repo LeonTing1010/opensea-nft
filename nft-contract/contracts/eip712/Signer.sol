@@ -24,7 +24,17 @@ contract Signer is Ownable {
     // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md#rationale-for-typehash
     // This should match whats in the client side whitelist signing code
     // https://github.com/msfeldstein/EIP712-whitelisting/blob/main/test/signWhitelist.ts#L22
-    bytes32 public constant GIFT_TYPEHASH = keccak256("Gift(address wallet)");
+    bytes32 public constant GIFT_TYPEHASH =
+        keccak256("Gift(address wallet,uint256 nonce)");
+
+    mapping(address => Limit) limits;
+
+    error ExceededDeadline(address, uint256);
+
+    struct Limit {
+        uint256 nonce;
+        uint256 deadline;
+    }
 
     constructor(string memory name) {
         // This should match whats in the client side whitelist signing code
@@ -43,6 +53,10 @@ contract Signer is Ownable {
         );
     }
 
+    function getUserNonce(address user) public view returns (uint256) {
+        return limits[user].nonce;
+    }
+
     function setSigningKey(address newSigningKey) public onlyOwner {
         giftSigningKey = newSigningKey;
     }
@@ -51,7 +65,23 @@ contract Signer is Ownable {
         require(giftSigningKey != address(0), "Signing not enabled");
         address recoveredAddress = recoverSigner(GIFT_TYPEHASH, signature);
         require(recoveredAddress == giftSigningKey, "Invalid Signature");
+        if (
+            limits[msg.sender].nonce > 0 &&
+            block.timestamp > limits[msg.sender].deadline
+        ) {
+            (bool res, ) = address(this).delegatecall(
+                abi.encodeWithSignature("increase()")
+            );
+            revert ExceededDeadline(msg.sender, limits[msg.sender].nonce);
+        }
         _;
+        increase();
+        limits[msg.sender].deadline = block.timestamp + 3 seconds;
+    }
+
+    function increase() internal returns (uint256) {
+        limits[msg.sender].nonce = limits[msg.sender].nonce + 1;
+        return limits[msg.sender].nonce;
     }
 
     function recoverSigner(bytes32 typehash, bytes calldata signature)
@@ -66,7 +96,9 @@ contract Signer is Ownable {
             abi.encodePacked(
                 "\x19\x01",
                 DOMAIN_SEPARATOR,
-                keccak256(abi.encode(typehash, msg.sender))
+                keccak256(
+                    abi.encode(typehash, msg.sender, limits[msg.sender].nonce)
+                )
             )
         );
         // Use the recover method to see what address was used to create
