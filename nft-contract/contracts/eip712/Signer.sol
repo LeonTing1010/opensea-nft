@@ -10,7 +10,7 @@ contract Signer is Ownable {
     // The key used to sign whitelist signatures.
     // We will check to ensure that the key that signed the signature
     // is this one that we expect.
-    address giftSigningKey = address(0);
+    address signingKey = address(0);
 
     // Domain Separator is the EIP-712 defined structure that defines what contract
     // and chain these signatures can be used for.  This ensures people can't take
@@ -27,14 +27,7 @@ contract Signer is Ownable {
     bytes32 public constant GIFT_TYPEHASH =
         keccak256("Gift(address wallet,uint256 nonce)");
 
-    mapping(address => Limit) limits;
-
-    error ExceededDeadline(address, uint256);
-
-    struct Limit {
-        uint256 nonce;
-        uint256 deadline;
-    }
+    mapping(address => uint256) nonces;
 
     constructor(string memory name) {
         // This should match whats in the client side whitelist signing code
@@ -54,34 +47,19 @@ contract Signer is Ownable {
     }
 
     function getUserNonce(address user) public view returns (uint256) {
-        return limits[user].nonce;
+        return nonces[user];
     }
 
     function setSigningKey(address newSigningKey) public onlyOwner {
-        giftSigningKey = newSigningKey;
+        signingKey = newSigningKey;
     }
 
     modifier requiresSignature(bytes calldata signature) {
-        require(giftSigningKey != address(0), "Signing not enabled");
+        require(signingKey != address(0), "Signing not enabled");
         address recoveredAddress = recoverSigner(GIFT_TYPEHASH, signature);
-        require(recoveredAddress == giftSigningKey, "Invalid Signature");
-        if (
-            limits[msg.sender].nonce > 0 &&
-            block.timestamp > limits[msg.sender].deadline
-        ) {
-            (bool res, ) = address(this).delegatecall(
-                abi.encodeWithSignature("increase()")
-            );
-            revert ExceededDeadline(msg.sender, limits[msg.sender].nonce);
-        }
+        require(recoveredAddress == signingKey, "Invalid Signature");
         _;
-        increase();
-        limits[msg.sender].deadline = block.timestamp + 3 seconds;
-    }
-
-    function increase() internal returns (uint256) {
-        limits[msg.sender].nonce = limits[msg.sender].nonce + 1;
-        return limits[msg.sender].nonce;
+        nonces[msg.sender] = nonces[msg.sender] + 1;
     }
 
     function recoverSigner(bytes32 typehash, bytes calldata signature)
@@ -96,9 +74,7 @@ contract Signer is Ownable {
             abi.encodePacked(
                 "\x19\x01",
                 DOMAIN_SEPARATOR,
-                keccak256(
-                    abi.encode(typehash, msg.sender, limits[msg.sender].nonce)
-                )
+                keccak256(abi.encode(typehash, msg.sender, nonces[msg.sender]))
             )
         );
         // Use the recover method to see what address was used to create
