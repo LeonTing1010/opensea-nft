@@ -14,7 +14,7 @@ contract Crowdsale is Signer {
 
     event FreeMintingStarted(bool opening);
 
-    constructor() Signer("SONNY-BOOT") {}
+    constructor() Signer("METAGOAL") {}
 
     function mint(uint256 amount, bytes calldata signature)
         external

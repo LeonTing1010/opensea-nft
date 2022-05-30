@@ -21,8 +21,10 @@ describe("FreeMint-EIP712-ONE", function () {
     salesAddress = getEnvVariable("SALES_CONTRACT_ADDRESS");
     console.log("Contract = " + salesAddress);
     contract = await getContract(salesAddress, "Crowdsale", getAccount(), hre);
-    await contract.setSigningKey(whitelistKey.address);
-    await contract.setOpening(true);
+    await contract.setSigningKey(whitelistKey.address, {
+      gasLimit: 3_000_000,
+    });
+    // await contract.setOpening(true);
   });
 
   it("Should allow gift if a valid signature is sent", async function () {
@@ -33,7 +35,7 @@ describe("FreeMint-EIP712-ONE", function () {
     let current = await contract.current();
     console.log("nonce = " + nonce + " current = " + current);
 
-    const sig = await signGiftlist("SONNY-BOOT", chainId, contract.address, whitelistKey, mintingKey.address, nonce);
+    const sig = await signGiftlist("METAGOAL", chainId, contract.address, whitelistKey, mintingKey.address, nonce);
     // const sig = "0xd67be67b8fe09b470bf62e89b12a82600d5d6219efc1fd8c067cd2c6f330741c41183fdf16e6db33c4421bbe679fe3c59f5ed0d387b4b1c49e0b49f4f52215921b";
     console.log("signature = " + sig);
     await contract.mint(2, sig, {
@@ -45,7 +47,7 @@ describe("FreeMint-EIP712-ONE", function () {
   it("Should not allow gift  if a different signature is sent", async function () {
     let current = await contract.current();
     let { chainId } = await ethers.provider.getNetwork();
-    const sig = await signGiftlist("SONNY-BOOT", chainId, contract.address, whitelistKey, mintingKey.address, 0);
+    const sig = await signGiftlist("METAGOAL", chainId, contract.address, whitelistKey, mintingKey.address, 0);
     try {
       await contract.mint(1, sig, {
         gasLimit: 3_000_000,
