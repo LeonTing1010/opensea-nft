@@ -143,7 +143,9 @@ contract NFTERC721A is
         override(AccessControl, ERC721A)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId);
+        return
+            super.supportsInterface(interfaceId) ||
+            ERC721A.supportsInterface(interfaceId);
     }
 
     function _beforeTokenTransfers(
