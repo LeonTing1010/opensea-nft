@@ -10,7 +10,7 @@ contract Signer is Ownable {
     // The key used to sign whitelist signatures.
     // We will check to ensure that the key that signed the signature
     // is this one that we expect.
-    address giftSigningKey = address(0);
+    address signingKey = address(0);
 
     // Domain Separator is the EIP-712 defined structure that defines what contract
     // and chain these signatures can be used for.  This ensures people can't take
@@ -24,7 +24,10 @@ contract Signer is Ownable {
     // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md#rationale-for-typehash
     // This should match whats in the client side whitelist signing code
     // https://github.com/msfeldstein/EIP712-whitelisting/blob/main/test/signWhitelist.ts#L22
-    bytes32 public constant GIFT_TYPEHASH = keccak256("Gift(address wallet)");
+    bytes32 public constant GIFT_TYPEHASH =
+        keccak256("Gift(address wallet,uint256 nonce)");
+
+    mapping(address => uint256) nonces;
 
     constructor(string memory name) {
         // This should match whats in the client side whitelist signing code
@@ -43,15 +46,24 @@ contract Signer is Ownable {
         );
     }
 
+    function getUserNonce(address user) public view returns (uint256) {
+        return nonces[user];
+    }
+
     function setSigningKey(address newSigningKey) public onlyOwner {
-        giftSigningKey = newSigningKey;
+        signingKey = newSigningKey;
     }
 
     modifier requiresSignature(bytes calldata signature) {
-        require(giftSigningKey != address(0), "Signing not enabled");
+        require(signingKey != address(0), "Signing not enabled");
         address recoveredAddress = recoverSigner(GIFT_TYPEHASH, signature);
-        require(recoveredAddress == giftSigningKey, "Invalid Signature");
+        require(recoveredAddress == signingKey, "Invalid Signature");
         _;
+        nonces[msg.sender] = nonces[msg.sender] + 1;
+    }
+
+    function restorable(bytes calldata signature) public view returns (bool) {
+        return signingKey == recoverSigner(GIFT_TYPEHASH, signature);
     }
 
     function recoverSigner(bytes32 typehash, bytes calldata signature)
@@ -66,7 +78,7 @@ contract Signer is Ownable {
             abi.encodePacked(
                 "\x19\x01",
                 DOMAIN_SEPARATOR,
-                keccak256(abi.encode(typehash, msg.sender))
+                keccak256(abi.encode(typehash, msg.sender, nonces[msg.sender]))
             )
         );
         // Use the recover method to see what address was used to create
