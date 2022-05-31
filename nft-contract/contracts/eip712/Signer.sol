@@ -24,10 +24,7 @@ contract Signer is Ownable {
     // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md#rationale-for-typehash
     // This should match whats in the client side whitelist signing code
     // https://github.com/msfeldstein/EIP712-whitelisting/blob/main/test/signWhitelist.ts#L22
-    bytes32 public constant GIFT_TYPEHASH =
-        keccak256("Gift(address wallet,uint256 nonce)");
-
-    mapping(address => uint256) nonces;
+    bytes32 public constant GIFT_TYPEHASH = keccak256("Gift(address wallet)");
 
     constructor(string memory name) {
         // This should match whats in the client side whitelist signing code
@@ -46,10 +43,6 @@ contract Signer is Ownable {
         );
     }
 
-    function getUserNonce(address user) public view returns (uint256) {
-        return nonces[user];
-    }
-
     function setSigningKey(address newSigningKey) public onlyOwner {
         signingKey = newSigningKey;
     }
@@ -59,10 +52,10 @@ contract Signer is Ownable {
         address recoveredAddress = recoverSigner(GIFT_TYPEHASH, signature);
         require(recoveredAddress == signingKey, "Invalid Signature");
         _;
-        nonces[msg.sender] = nonces[msg.sender] + 1;
     }
 
     function restorable(bytes calldata signature) public view returns (bool) {
+        require(signingKey != address(0), "Signing not enabled");
         return signingKey == recoverSigner(GIFT_TYPEHASH, signature);
     }
 
@@ -78,7 +71,7 @@ contract Signer is Ownable {
             abi.encodePacked(
                 "\x19\x01",
                 DOMAIN_SEPARATOR,
-                keccak256(abi.encode(typehash, msg.sender, nonces[msg.sender]))
+                keccak256(abi.encode(typehash, msg.sender))
             )
         );
         // Use the recover method to see what address was used to create

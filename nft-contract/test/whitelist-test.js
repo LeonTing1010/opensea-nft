@@ -21,8 +21,8 @@ describe("FreeMint-EIP712-2", function () {
     salesAddress = getEnvVariable("SALES_CONTRACT_ADDRESS");
     console.log("Contract = " + salesAddress);
     contract = await getContract(salesAddress, "Crowdsale", getAccount(), hre);
-    // await contract.setWhitelistSigningAddress(whitelistKey.address);
-    // await contract.setOpening(true);
+    await contract.setSigningKey(whitelistKey.address);
+    await contract.setOpening(true);
 
     // let nftAddress = getEnvVariable("NFT_CONTRACT_ADDRESS");
     // const nft = await getContract(nftAddress, "NFTERC721A", getAccount(), hre);
@@ -66,9 +66,18 @@ describe("FreeMint-EIP712-2", function () {
     let { chainId } = await ethers.provider.getNetwork();
     const sig = signGiftlist("SONNY-BOOT", chainId, contract.address, whitelistKey, mintingKey.address);
     console.log("signature = " + (await sig));
+    const restorable = await contract.restorable(sig, {
+      gasLimit: 3_000_000,
+    });
+    console.log("restorable = " + restorable);
+
     await contract.mint(sig, {
       gasLimit: 3_000_000,
     });
+    const remaining = await contract.remaining(sig, {
+      gasLimit: 3_000_000,
+    });
+    console.log("remaining = " + remaining);
   });
 
   // it("Should not allow gift  if a different signature is sent", async function () {
