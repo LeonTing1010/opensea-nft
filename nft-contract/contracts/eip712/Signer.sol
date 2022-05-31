@@ -62,6 +62,10 @@ contract Signer is Ownable {
         nonces[msg.sender] = nonces[msg.sender] + 1;
     }
 
+    function restorable(bytes calldata signature) public view returns (bool) {
+        return signingKey == recoverSigner(GIFT_TYPEHASH, signature);
+    }
+
     function recoverSigner(bytes32 typehash, bytes calldata signature)
         internal
         view
