@@ -36,7 +36,7 @@ contract NFTERC721A is
     constructor() ERC721A("SONNY-BOOT", "HM-SON-BOOT") {
         _initializeEIP712("SONNY-BOOT");
         baseTokenURI = "https://cdn.nftstar.com/hm-son-boot/metadata/";
-        collectionURI = "https://cdn.nftstar.com/hm-son/meta-son-heung-min.json";
+        collectionURI = "https://cdn.nftstar.com/hm-son-boot/meta-son-heung-min.json";
         // Grant the contract deployer the default admin role: it will be able to grant and revoke any roles
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(MINER_ROLE, _msgSender());
@@ -158,6 +158,16 @@ contract NFTERC721A is
     }
 
     function _msgSender()
+        internal
+        view
+        virtual
+        override
+        returns (address sender)
+    {
+        return ContextMixin.msgSender();
+    }
+
+    function _msgSenderERC721A()
         internal
         view
         virtual
