@@ -165,4 +165,14 @@ contract NFTERC721A is
     {
         return ContextMixin.msgSender();
     }
+
+    function _msgSenderERC721A()
+        internal
+        view
+        virtual
+        override
+        returns (address sender)
+    {
+        return ContextMixin.msgSender();
+    }
 }
