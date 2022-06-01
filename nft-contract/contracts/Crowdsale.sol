@@ -24,7 +24,7 @@ contract Crowdsale is Signer {
         require(opening, "Free mining has not yet begun");
         address miner = msg.sender;
         require(!free[miner], "Already mined");
-        require(token.current() <= TOTAL_SUPPLY, "Exceeded maximum supply");
+        require(token.current() < TOTAL_SUPPLY, "Exceeded maximum supply");
         free[miner] = true;
         token.mint(miner, 1);
     }

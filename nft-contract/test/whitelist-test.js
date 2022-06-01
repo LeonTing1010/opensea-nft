@@ -74,9 +74,7 @@ describe("FreeMint-EIP712-2", function () {
     await contract.mint(sig, {
       gasLimit: 3_000_000,
     });
-    const remaining = await contract.remaining(sig, {
-      gasLimit: 3_000_000,
-    });
+    const remaining = await contract.remaining();
     console.log("remaining = " + remaining);
   });
 

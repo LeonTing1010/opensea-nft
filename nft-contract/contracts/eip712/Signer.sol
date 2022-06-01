@@ -49,21 +49,28 @@ contract Signer is Ownable {
 
     modifier requiresSignature(bytes calldata signature) {
         require(signingKey != address(0), "Signing not enabled");
-        address recoveredAddress = recoverSigner(GIFT_TYPEHASH, signature);
+        address recoveredAddress = recoverSigner(
+            msg.sender,
+            GIFT_TYPEHASH,
+            signature
+        );
         require(recoveredAddress == signingKey, "Invalid Signature");
         _;
     }
 
-    function restorable(bytes calldata signature) public view returns (bool) {
-        require(signingKey != address(0), "Signing not enabled");
-        return signingKey == recoverSigner(GIFT_TYPEHASH, signature);
+    function restorable(address sender, bytes calldata signature)
+        public
+        view
+        returns (bool)
+    {
+        return signingKey == recoverSigner(sender, GIFT_TYPEHASH, signature);
     }
 
-    function recoverSigner(bytes32 typehash, bytes calldata signature)
-        internal
-        view
-        returns (address)
-    {
+    function recoverSigner(
+        address sender,
+        bytes32 typehash,
+        bytes calldata signature
+    ) internal view returns (address) {
         // Verify EIP-712 signature by recreating the data structure
         // that we signed on the client side, and then using that to recover
         // the address that signed the signature for this data.
@@ -71,7 +78,7 @@ contract Signer is Ownable {
             abi.encodePacked(
                 "\x19\x01",
                 DOMAIN_SEPARATOR,
-                keccak256(abi.encode(typehash, msg.sender))
+                keccak256(abi.encode(typehash, sender))
             )
         );
         // Use the recover method to see what address was used to create
