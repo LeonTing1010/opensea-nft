@@ -8,7 +8,6 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Pausable.sol";
 import "erc721a/contracts/ERC721A.sol";
 import "erc721a/contracts/extensions/ERC721ABurnable.sol";
 import "erc721a/contracts/extensions/ERC721AQueryable.sol";
-import "erc721a/contracts/extensions/ERC721AOwnersExplicit.sol";
 import "./ContextMixin.sol";
 import "./NativeMetaTransaction.sol";
 import "./ERC721APausable.sol";
@@ -17,7 +16,6 @@ contract NFTERC721A is
     ERC721A,
     ERC721ABurnable,
     ERC721AQueryable,
-    ERC721AOwnersExplicit,
     ERC721APausable,
     AccessControl,
     Ownable,
@@ -37,8 +35,8 @@ contract NFTERC721A is
 
     constructor() ERC721A("SONNY", "HM-SON") {
         _initializeEIP712("SONNY");
-        baseTokenURI = "https://cdn.nftstar.com/hm-son/metadata/";
-        collectionURI = "https://cdn.nftstar.com/hm-son/meta-son-heung-min.json";
+        baseTokenURI = "https://bafybeiekgavtfzbtsorukgzmk45pxcxvu6i4kc6xc4ve54g7sp4lgvpfaq.ipfs.nftstorage.link";
+        collectionURI = "https://bafybeiekgavtfzbtsorukgzmk45pxcxvu6i4kc6xc4ve54g7sp4lgvpfaq.ipfs.nftstorage.link";
         // Grant the contract deployer the default admin role: it will be able to grant and revoke any roles
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(MINER_ROLE, msg.sender);
@@ -138,10 +136,12 @@ contract NFTERC721A is
         public
         view
         virtual
-        override(AccessControl, ERC721A, IERC165)
+        override(AccessControl, ERC721A)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId);
+        return
+            super.supportsInterface(interfaceId) ||
+            ERC721A.supportsInterface(interfaceId);
     }
 
     function _beforeTokenTransfers(
@@ -151,5 +151,15 @@ contract NFTERC721A is
         uint256 quantity
     ) internal virtual override(ERC721A, ERC721APausable) {
         super._beforeTokenTransfers(from, to, startTokenId, quantity);
+    }
+
+    function _msgSenderERC721A()
+        internal
+        view
+        virtual
+        override
+        returns (address sender)
+    {
+        return ContextMixin.msgSender();
     }
 }
