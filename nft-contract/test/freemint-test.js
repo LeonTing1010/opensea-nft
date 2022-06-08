@@ -1,7 +1,7 @@
 // const { Contract } = require("@ethersproject/contracts");
 // const { SignerWithAddress } = require("@nomiclabs/hardhat-ethers/signers");
 const { ethers } = require("hardhat");
-const { signWhitelist } = require("../scripts/sign");
+const { signGiftlist } = require("../scripts/sign");
 // const { expectRevert } = require("@openzeppelin/test-helpers");
 const { getContract, getEnvVariable, getAccount, getBurnAccount, getProvider } = require("./helpers");
 const { expect } = require("chai");
@@ -21,8 +21,8 @@ describe("Token", function () {
     salesAddress = getEnvVariable("SALES_CONTRACT_ADDRESS");
     console.log("Contract = " + salesAddress);
     contract = await getContract(salesAddress, "Crowdsale", getAccount(), hre);
-    await contract.setWhitelistSigningKey(whitelistKey.address);
-    await contract.setOpening(true);
+    await contract.setGiftlistSigningKey(whitelistKey.address);
+    await contract.setOpening(false);
 
     // let nftAddress = getEnvVariable("NFT_CONTRACT_ADDRESS");
     // const nft = await getContract(nftAddress, "NFTERC721A", getAccount(), hre);
@@ -30,26 +30,22 @@ describe("Token", function () {
     // await contract.setNft(nftAddress);
   });
 
-  it("Should allow minting with whitelist enabled if a valid signature is sent", async function () {
+  it("Should allow minting with giftlist enabled if a valid signature is sent", async function () {
     let { chainId } = await ethers.provider.getNetwork();
-    const sig = signWhitelist("Crowdsale", chainId, contract.address, whitelistKey, mintingKey.address);
+    const sig = signGiftlist("Crowdsale", chainId, contract.address, whitelistKey, mintingKey.address);
     console.log("Sig = " + (await sig));
-    let price = ethers.BigNumber.from("70000000000000000");
-    await contract.preMint(1, sig, {
+    await contract.gift(1, sig, {
       gasLimit: 3_000_000,
-      value: price,
     });
   });
 
   it("Should not allow minting with whitelist enabled if a different signature is sent", async function () {
     // const contract = await getContract(salesAddress, "Crowdsale", getAccount(), hre);
     let { chainId } = await ethers.provider.getNetwork();
-    const sig = signWhitelist("Crowdsale", chainId, contract.address, maliciousKey, mintingKey.address);
-    let price = ethers.BigNumber.from("70000000000000000");
+    const sig = signGiftlist("Crowdsale", chainId, contract.address, maliciousKey, mintingKey.address);
     try {
-      await contract.preMint(1, sig, {
+      await contract.gift(1, sig, {
         gasLimit: 3_000_000,
-        value: price,
       });
     } catch (e) {
       console.log("msg:" + e.message);

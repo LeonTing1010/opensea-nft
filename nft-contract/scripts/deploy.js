@@ -37,11 +37,11 @@ task("deploy-crowdsale", "Deploys the Crowdsale.sol contract").setAction(async f
 
 task("deploy", "Deploys the NFTERC721A.sol & Crowdsale.sol contract").setAction(async function (taskArguments, hre) {
   const nftContractFactory = await hre.ethers.getContractFactory("NFTERC721A", getAccount());
-  const nft = await nftContractFactory.deploy();
-  console.log(`NFT Contract deployed to address: ${nft.address}`);
+  const nft = await nftContractFactory.deploy({ gasLimit: 5_000_000 });
+  console.log(`NFTERC721A Contract deployed to address: ${nft.address}`);
 
   const salesContractFactory = await hre.ethers.getContractFactory("Crowdsale", getAccount());
-  const sales = await salesContractFactory.deploy();
+  const sales = await salesContractFactory.deploy({ gasLimit: 5_000_000 });
   console.log(`Crowdsale Contract deployed to address: ${sales.address}`);
 
   const nftAddress = nft.address;

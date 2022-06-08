@@ -8,7 +8,6 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Pausable.sol";
 import "erc721a/contracts/ERC721A.sol";
 import "erc721a/contracts/extensions/ERC721ABurnable.sol";
 import "erc721a/contracts/extensions/ERC721AQueryable.sol";
-import "erc721a/contracts/extensions/ERC721AOwnersExplicit.sol";
 import "../eip712/NativeMetaTransaction.sol";
 import "../eip712/ContextMixin.sol";
 import "./ERC721APausable.sol";
@@ -17,7 +16,6 @@ contract NFTERC721A is
     ERC721A,
     ERC721ABurnable,
     ERC721AQueryable,
-    ERC721AOwnersExplicit,
     ERC721APausable,
     AccessControl,
     Ownable,
@@ -35,8 +33,8 @@ contract NFTERC721A is
 
     // uint256 public constant TOTAL_SUPPLY = 10800;
 
-    constructor() ERC721A("SONNY", "HM-SON") {
-        _initializeEIP712("SONNY");
+    constructor() ERC721A("NFTERC721A", "NFT") {
+        _initializeEIP712("NFTERC721A");
         baseTokenURI = "https://cdn.nftstar.com/hm-son/metadata/";
         collectionURI = "https://cdn.nftstar.com/hm-son/meta-son-heung-min.json";
         // Grant the contract deployer the default admin role: it will be able to grant and revoke any roles
@@ -86,7 +84,7 @@ contract NFTERC721A is
      *
      * - the caller must have the `PAUSER_ROLE`.
      */
-    function pause() public virtual {
+    function pause() external virtual {
         require(
             hasRole(PAUSER_ROLE, _msgSender()),
             "NFT: must have pauser role to pause"
@@ -103,7 +101,7 @@ contract NFTERC721A is
      *
      * - the caller must have the `PAUSER_ROLE`.
      */
-    function unpause() public virtual {
+    function unpause() external virtual {
         require(
             hasRole(PAUSER_ROLE, _msgSender()),
             "NFT: must have pauser role to unpause"
@@ -123,7 +121,10 @@ contract NFTERC721A is
         return collectionURI;
     }
 
-    function setContractURI(string memory _contractURI) public onlyOwner {
+    function setContractURI(string memory _contractURI)
+        external
+        onlyRole(MINER_ROLE)
+    {
         collectionURI = _contractURI;
     }
 
@@ -133,7 +134,10 @@ contract NFTERC721A is
     }
 
     /// @dev Sets the base token URI prefix.
-    function setBaseTokenURI(string memory _baseTokenURI) public onlyOwner {
+    function setBaseTokenURI(string memory _baseTokenURI)
+        external
+        onlyRole(MINER_ROLE)
+    {
         baseTokenURI = _baseTokenURI;
     }
 
@@ -154,7 +158,9 @@ contract NFTERC721A is
         override(AccessControl, ERC721A)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId);
+        return
+            ERC721A.supportsInterface(interfaceId) ||
+            super.supportsInterface(interfaceId);
     }
 
     function _beforeTokenTransfers(
@@ -167,6 +173,16 @@ contract NFTERC721A is
     }
 
     function _msgSender()
+        internal
+        view
+        virtual
+        override
+        returns (address sender)
+    {
+        return ContextMixin.msgSender();
+    }
+
+    function _msgSenderERC721A()
         internal
         view
         virtual

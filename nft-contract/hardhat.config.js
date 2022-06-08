@@ -6,7 +6,7 @@ require("./scripts/crowdsale.js");
 require("@nomiclabs/hardhat-etherscan");
 // require("hardhat-gas-reporter");
 
-const { INFURA_KEY, REPORT_GAS, ACCOUNT_PRIVATE_KEY, ETHERSCAN_API_KEY, NETWORK } = process.env;
+const { INFURA_KEY, REPORT_GAS, ACCOUNT_PRIVATE_KEY, ETHERSCAN_API_KEY, POLYGONSCAN_API_KEY, NETWORK } = process.env;
 
 module.exports = {
   solidity: "0.8.7",
@@ -30,7 +30,11 @@ module.exports = {
     },
     maticmum: {
       url: `https://polygon-mumbai.infura.io/v3/${INFURA_KEY}`,
-      url: "https://rpc-mumbai.matic.today",
+      // url: "https://rpc-mumbai.matic.today",
+      accounts: [`0x${ACCOUNT_PRIVATE_KEY}`],
+    },
+    polygon: {
+      url: `https://polygon.infura.io/v3/${INFURA_KEY}`,
       accounts: [`0x${ACCOUNT_PRIVATE_KEY}`],
     },
     rinkeby: {
@@ -48,7 +52,13 @@ module.exports = {
     },
   },
   etherscan: {
-    apiKey: ETHERSCAN_API_KEY,
+    apiKey: {
+      mainnet: ETHERSCAN_API_KEY,
+      rinkeby: ETHERSCAN_API_KEY,
+      // polygon
+      polygon: POLYGONSCAN_API_KEY,
+      polygonMumbai: POLYGONSCAN_API_KEY,
+    },
   },
   solidity: {
     version: "0.8.7",
