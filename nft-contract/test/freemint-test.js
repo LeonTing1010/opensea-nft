@@ -6,7 +6,7 @@ const { signGiftlist } = require("../scripts/sign");
 const { getContract, getEnvVariable, getAccount, getBurnAccount, getProvider } = require("./helpers");
 const { expect } = require("chai");
 
-describe("Token", function () {
+describe("Free Mint", function () {
   let contract;
   let mintingKey;
   let whitelistKey;

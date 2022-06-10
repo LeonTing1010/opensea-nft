@@ -40,7 +40,7 @@ contract Crowdsale is
     event PreSaleStarted(bool opening);
     event PublicSaleStarted(bool closing);
     event SettedMaxAmount(uint256 max);
-    event SettedMaxLimit(uint256 limit);
+    event SettedLimit(uint256 limit);
 
     modifier onlyPositive(uint256 _number) {
         require(_number > 0, "Must be greater than 0");
@@ -159,19 +159,19 @@ contract Crowdsale is
         onlyRole(CROWD_ROLE)
         onlyPositive(_amount)
     {
-        require(_amount < TOTAL_SUPPLY, "New amount shoud bigger than before");
+        require(_amount < TOTAL_SUPPLY, "Invalid amount");
         max = _amount;
         emit SettedMaxAmount(max);
     }
 
-    function setMaxLimit(uint32 _limit)
+    function setLimit(uint32 _limit)
         external
         onlyRole(CROWD_ROLE)
         onlyPositive(_limit)
     {
-        require(_limit < max, "New amount shoud bigger than before");
+        require(_limit < max, "Invalid limit");
         limit = _limit;
-        emit SettedMaxLimit(limit);
+        emit SettedLimit(limit);
     }
 
     function setNft(address _nft) external onlyRole(CROWD_ROLE) {

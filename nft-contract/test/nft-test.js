@@ -4,12 +4,12 @@ const { getContract, getEnvVariable, getAccount, getBurnAccount, getProvider } =
 
 describe("NFTERC721-MINT", function () {
   this.timeout(60000000000);
-  it("NFTERC721A-mintTo-1", async function () {
+  it("NFTERC721A", async function () {
     //setTimeout(done, 100000);
     const nft = getEnvVariable("NFTA_CONTRACT_ADDRESS");
     const cnft = await getContract(nft, "NFTERC721A", getAccount(), hre);
     console.log("ERC721A = " + cnft.address);
-    let supported = await cnft.supportsInterface("0x80ac58cd", { gasLimit: 2000000 });
+    const supported = (await cnft.supportsInterface(0x01ffc9a7)) && (await cnft.supportsInterface(0x80ac58cd)) && (await cnft.supportsInterface(0x5b5e139f));
     expect(supported).to.be.true;
   });
 });

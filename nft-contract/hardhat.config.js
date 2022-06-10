@@ -59,6 +59,16 @@ module.exports = {
       polygon: POLYGONSCAN_API_KEY,
       polygonMumbai: POLYGONSCAN_API_KEY,
     },
+    customChains: [
+      {
+        network: "rinkeby",
+        chainId: 4,
+        urls: {
+          apiURL: "https://api-rinkeby.etherscan.io",
+          browserURL: "https://rinkeby.etherscan.io",
+        },
+      },
+    ],
   },
   solidity: {
     version: "0.8.7",
