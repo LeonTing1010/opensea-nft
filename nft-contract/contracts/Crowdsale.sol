@@ -10,7 +10,6 @@ contract Crowdsale is Signer, AccessControl {
     bytes32 public constant GIFT_ROLE = keccak256("GIFT_ROLE");
     NFTERC721A public token;
     bool public opening; // crowdsale opening status
-    uint256 private totalGift = 1522;
 
     event FreeMintingStarted(bool opening);
 
@@ -46,11 +45,6 @@ contract Crowdsale is Signer, AccessControl {
         onlyRole(GIFT_ROLE)
     {
         require(!opening, "The airdrop is over");
-        (bool ok, uint256 result) = totalGift.trySub(
-            _accounts.length * _quantity
-        );
-        require(ok, "Exceed the maximum number of airdrops");
-        totalGift = result;
         for (uint256 index = 0; index < _accounts.length; index++) {
             token.mint(_accounts[index], _quantity);
         }
