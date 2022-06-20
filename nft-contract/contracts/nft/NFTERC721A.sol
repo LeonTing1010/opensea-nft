@@ -34,8 +34,8 @@ contract NFTERC721A is
 
     constructor() ERC721A("METAGOAL", "MGOAL") {
         _initializeEIP712("METAGOAL");
-        baseTokenURI = "http://cdn.nftstar.com/hm-son/metadata/";
-        collectionURI = "https://cdn.nftstar.com/hm-son/meta-son-heung-min.json";
+        baseTokenURI = "http://cdn.nftstar.com/mgoal/metadata/";
+        collectionURI = "https://cdn.nftstar.com/mgoal/meta-mgoal.json";
         // Grant the contract deployer the default admin role: it will be able to grant and revoke any roles
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(MINER_ROLE, _msgSender());

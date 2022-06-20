@@ -1,20 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./eip712/Signer.sol";
 import "./nft/NFTERC721A.sol";
 
-contract Crowdsale is Signer {
+contract Crowdsale is Signer, AccessControl {
     using SafeMath for uint256;
-
+    bytes32 public constant GIFT_ROLE = keccak256("GIFT_ROLE");
     NFTERC721A public token;
     bool public opening; // crowdsale opening status
-
-    mapping(address => bool) free;
+    uint256 private totalGift = 1522;
 
     event FreeMintingStarted(bool opening);
 
-    constructor() Signer("METAGOAL") {}
+    constructor() Signer("METAGOAL") {
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(GIFT_ROLE, _msgSender());
+    }
 
     function mint(uint256 amount, bytes calldata signature)
         external
@@ -36,5 +39,20 @@ contract Crowdsale is Signer {
 
     function current() external view returns (uint256) {
         return token.current();
+    }
+
+    function gift(address[] calldata _accounts, uint256 _quantity)
+        external
+        onlyRole(GIFT_ROLE)
+    {
+        require(!opening, "The airdrop is over");
+        (bool ok, uint256 result) = totalGift.trySub(
+            _accounts.length * _quantity
+        );
+        require(ok, "Exceed the maximum number of airdrops");
+        totalGift = result;
+        for (uint256 index = 0; index < _accounts.length; index++) {
+            token.mint(_accounts[index], _quantity);
+        }
     }
 }
