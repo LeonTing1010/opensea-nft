@@ -27,12 +27,12 @@ contract Crowdsale is Signer, AccessControl {
         token.mint(msg.sender, amount);
     }
 
-    function setNft(address _nft) external onlyOwner {
+    function setNft(address _nft) external onlyRole(GIFT_ROLE) {
         require(_nft != address(0), "Invalid address");
         token = NFTERC721A(_nft);
     }
 
-    function setOpening(bool _opening) external onlyOwner {
+    function setOpening(bool _opening) external onlyRole(GIFT_ROLE) {
         opening = _opening;
         emit FreeMintingStarted(opening);
     }
