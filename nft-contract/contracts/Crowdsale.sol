@@ -14,8 +14,8 @@ contract Crowdsale is Signer, AccessControl {
     event FreeMintingStarted(bool opening);
 
     constructor() Signer("METAGOAL") {
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(GIFT_ROLE, _msgSender());
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setupRole(GIFT_ROLE, msg.sender);
     }
 
     function mint(uint256 amount, bytes calldata signature)
@@ -40,13 +40,17 @@ contract Crowdsale is Signer, AccessControl {
         return token.current();
     }
 
-    function gift(address[] calldata _accounts, uint256 _quantity)
+    function gift(address[] calldata _accounts, uint256[] calldata _quantity)
         external
         onlyRole(GIFT_ROLE)
     {
         require(!opening, "The airdrop is over");
+        require(
+            _accounts.length == _quantity.length,
+            "The two arrays are not equal in length"
+        );
         for (uint256 index = 0; index < _accounts.length; index++) {
-            token.mint(_accounts[index], _quantity);
+            token.mint(_accounts[index], _quantity[index]);
         }
     }
 }
