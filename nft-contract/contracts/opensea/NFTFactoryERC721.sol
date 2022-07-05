@@ -4,22 +4,14 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "../nft/NFTERC721A.sol";
 import "./NFTFactory.sol";
 import "./FactoryMintable.sol";
-import "./AllowsConfigurableProxy.sol";
 
-contract NFTFactoryERC721 is
-    NFTERC721A,
-    FactoryMintable,
-    ReentrancyGuard,
-    AllowsConfigurableProxy
-{
+contract NFTFactoryERC721 is NFTERC721A, FactoryMintable, ReentrancyGuard {
     using Strings for uint256;
     uint256 public maxSupply;
 
     error NewMaxSupplyMustBeGreater();
 
-    constructor(address _proxyAddress)
-        AllowsConfigurableProxy(_proxyAddress, true)
-    {
+    constructor(address _proxyAddress) NFTERC721A(_proxyAddress) {
         maxSupply = totalSupply();
         tokenFactory = address(
             new NFTFactory(

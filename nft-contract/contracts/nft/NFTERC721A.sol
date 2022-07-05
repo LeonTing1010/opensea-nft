@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Pausable.sol";
 import "erc721a/contracts/ERC721A.sol";
@@ -10,6 +9,7 @@ import "erc721a/contracts/extensions/ERC721AQueryable.sol";
 import "../eip712/NativeMetaTransaction.sol";
 import "../eip712/ContextMixin.sol";
 import "./ERC721APausable.sol";
+import "../opensea/AllowsConfigurableProxy.sol";
 
 contract NFTERC721A is
     ERC721A,
@@ -17,24 +17,24 @@ contract NFTERC721A is
     ERC721AQueryable,
     ERC721APausable,
     AccessControl,
-    Ownable,
+    AllowsConfigurableProxy,
     ContextMixin,
     NativeMetaTransaction
 {
     // Create a new role identifier for the minter role
     bytes32 public constant MINER_ROLE = keccak256("MINER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
-    // using Counters for Counters.Counter;
-    // Counters.Counter private currentTokenId;
+
     /// @dev Base token URI used as a prefix by tokenURI().
     string private baseTokenURI;
     string private collectionURI;
 
-    // uint256 public constant TOTAL_SUPPLY = 10800;
-
-    constructor() ERC721A("METAGOAL", "MGOAL") {
+    constructor(address _proxyAddress)
+        ERC721A("METAGOAL", "MGOAL")
+        AllowsConfigurableProxy(_proxyAddress, true)
+    {
         _initializeEIP712("METAGOAL");
-        baseTokenURI = "http://cdn.nftstar.com/mgoal/metadata/";
+        baseTokenURI = "https://cdn.nftstar.com/mgoal/metadata/";
         collectionURI = "https://cdn.nftstar.com/mgoal/meta-mgoal.json";
         // Grant the contract deployer the default admin role: it will be able to grant and revoke any roles
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
@@ -174,5 +174,27 @@ contract NFTERC721A is
         returns (address sender)
     {
         return ContextMixin.msgSender();
+    }
+
+    /**
+     * Override isApprovedForAll to auto-approve OS's proxy contract
+     */
+    function isApprovedForAll(address _owner, address _operator)
+        public
+        view
+        override
+        returns (bool isOperator)
+    {
+        // if OpenSea's ERC721 Proxy Address is detected, auto-return true
+        // for Polygon's Mumbai testnet, use 0xff7Ca10aF37178BdD056628eF42fD7F799fAc77c
+        // if (_operator == address(0x58807baD0B376efc12F5AD86aAc70E78ed67deaE)) {
+        //     return true;
+        // }
+        if (isApprovedForProxy(_owner, _operator)) {
+            return true;
+        }
+
+        // otherwise, use the default ERC721.isApprovedForAll()
+        return ERC721A.isApprovedForAll(_owner, _operator);
     }
 }
