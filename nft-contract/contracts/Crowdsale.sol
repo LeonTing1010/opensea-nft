@@ -53,4 +53,12 @@ contract Crowdsale is Signer, AccessControl {
             token.mint(_accounts[index], _quantity[index]);
         }
     }
+
+    function transferRoleAdmin(address newDefaultAdmin)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        require(newDefaultAdmin != address(0), "Invalid address");
+        _setupRole(DEFAULT_ADMIN_ROLE, newDefaultAdmin);
+    }
 }
