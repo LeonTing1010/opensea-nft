@@ -2,38 +2,55 @@
 pragma solidity ^0.8.7;
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "./eip712/Signer.sol";
+import "@openzeppelin/contracts/security/PullPayment.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./nft/NFTERC721A.sol";
 
-contract Crowdsale is Signer, AccessControl {
+contract Crowdsale is AccessControl, PullPayment, Ownable {
     using SafeMath for uint256;
-    bytes32 public constant GIFT_ROLE = keccak256("GIFT_ROLE");
+    bytes32 public constant CROWD_ROLE = keccak256("CROWD_ROLE");
     NFTERC721A public token;
-    bool public opening; // crowdsale opening status
+    bool public opening; // airdrop opening status
+    uint256 public constant TotalSupply = 6888;
+    uint256 public constant SLimit = 10; //single mint limit
+    uint256 public constant MLimit = 1000; //mining mint limit
+    uint256 public salePrice = 0.15 ether;
+    address public collector;
+    uint256 public mAmount;
 
-    event FreeMintingStarted(bool opening);
+    event AirdropStarted(bool opening);
+    event SalePriceChanged(uint256 price);
 
-    constructor() Signer("Tiger") {
+    constructor(address _collector) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _setupRole(GIFT_ROLE, msg.sender);
+        _setupRole(CROWD_ROLE, msg.sender);
+        collector = _collector;
     }
 
-    function mint(uint256 amount, bytes calldata signature)
-        external
-        requiresSignature(signature)
-    {
-        require(opening, "Free mining has not yet begun");
-        token.mint(msg.sender, amount);
+    function mint(uint256 _amount) external payable {
+        require(!opening, "Public sale has ended");
+        require(_amount <= SLimit, "Exceeded the single purchase limit");
+        require(msg.value == _amount.mul(salePrice), "Payment declined");
+        mAmount = mAmount.add(_amount);
+        require(mAmount <= MLimit, "Exceeded the total amount of mining");
+
+        _asyncTransfer(collector, msg.value);
+        token.mint(msg.sender, _amount);
     }
 
-    function setNft(address _nft) external onlyRole(GIFT_ROLE) {
+    function setNft(address _nft) external onlyRole(CROWD_ROLE) {
         require(_nft != address(0), "Invalid address");
         token = NFTERC721A(_nft);
     }
 
-    function setOpening(bool _opening) external onlyRole(GIFT_ROLE) {
+    function setOpening(bool _opening) external onlyRole(CROWD_ROLE) {
         opening = _opening;
-        emit FreeMintingStarted(opening);
+        emit AirdropStarted(opening);
+    }
+
+    function setSalePrice(uint256 _price) external onlyRole(CROWD_ROLE) {
+        salePrice = _price;
+        emit SalePriceChanged(salePrice);
     }
 
     function current() external view returns (uint256) {
@@ -42,9 +59,9 @@ contract Crowdsale is Signer, AccessControl {
 
     function gift(address[] calldata _accounts, uint256[] calldata _quantity)
         external
-        onlyRole(GIFT_ROLE)
+        onlyRole(CROWD_ROLE)
     {
-        require(!opening, "The airdrop is over");
+        require(opening, "Airdrop has not started");
         require(
             _accounts.length == _quantity.length,
             "The two arrays are not equal in length"
@@ -52,5 +69,17 @@ contract Crowdsale is Signer, AccessControl {
         for (uint256 index = 0; index < _accounts.length; index++) {
             token.mint(_accounts[index], _quantity[index]);
         }
+    }
+
+    function setCollector(address _collector) external onlyOwner {
+        require(_collector != address(0), "Invalid address");
+        collector = _collector;
+    }
+
+    function transferRoleAdmin(address newDefaultAdmin)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        _setupRole(DEFAULT_ADMIN_ROLE, newDefaultAdmin);
     }
 }
