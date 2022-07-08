@@ -13,7 +13,7 @@ contract Crowdsale is Signer, AccessControl {
 
     event FreeMintingStarted(bool opening);
 
-    constructor() Signer("METAGOAL") {
+    constructor() Signer("Tiger") {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(GIFT_ROLE, msg.sender);
     }
