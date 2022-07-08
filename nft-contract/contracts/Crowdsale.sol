@@ -80,6 +80,7 @@ contract Crowdsale is AccessControl, PullPayment, Ownable {
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
+        require(newDefaultAdmin != address(0), "Invalid address");
         _setupRole(DEFAULT_ADMIN_ROLE, newDefaultAdmin);
     }
 }
