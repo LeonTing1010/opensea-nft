@@ -36,26 +36,27 @@ task("deploy-crowdsale", "Deploys the Crowdsale.sol contract").setAction(async f
 });
 
 task("deploy", "Deploys the NFTERC721A.sol & Crowdsale.sol contract").setAction(async function (taskArguments, hre) {
-  const nftContractFactory = await hre.ethers.getContractFactory("NFTERC721A", getAccount());
-  const nft = await nftContractFactory.deploy();
+  const deployer = getAccount();
+  const nftContractFactory = await hre.ethers.getContractFactory("NFTERC721A", deployer);
+  const nft = await nftContractFactory.deploy("0xff7Ca10aF37178BdD056628eF42fD7F799fAc77c");
   console.log(`NFT Contract deployed to address: ${nft.address}`);
 
-  const salesContractFactory = await hre.ethers.getContractFactory("Crowdsale", getAccount());
-  const sales = await salesContractFactory.deploy();
+  const salesContractFactory = await hre.ethers.getContractFactory("Crowdsale", deployer);
+  const sales = await salesContractFactory.deploy(deployer.address, nft.address);
   console.log(`Crowdsale Contract deployed to address: ${sales.address}`);
 
-  const nftAddress = nft.address;
+  // const nftAddress = nft.address;
   const salesAddress = sales.address;
 
   // const nftAddress = getEnvVariable("NFT_CONTRACT_ADDRESS");
   // const salesAddress = getEnvVariable("SALES_CONTRACT_ADDRESS");
 
-  const contractNFT = await getContract(nftAddress, "NFTERC721A", hre);
-  const contractCrowdsale = await getContract(salesAddress, "Crowdsale", hre);
+  // const contractNFT = await getContract(nftAddress, "NFTERC721A", hre);
+  // const contractCrowdsale = await getContract(salesAddress, "Crowdsale", hre);
 
-  const setNft = await contractCrowdsale.setNft(nftAddress, { gasLimit: 2_000_000 });
-  console.log(`setNft Transaction Hash: ${setNft.hash}`);
-  const grantRole = await contractNFT.grantRole("0xa952726ef2588ad078edf35b066f7c7406e207cb0003bbaba8cb53eba9553e72", salesAddress, {
+  // const setNft = await contractCrowdsale.setNft(nftAddress, { gasLimit: 2_000_000 });
+  // console.log(`setNft Transaction Hash: ${setNft.hash}`);
+  const grantRole = await nft.grantRole("0xa952726ef2588ad078edf35b066f7c7406e207cb0003bbaba8cb53eba9553e72", salesAddress, {
     gasLimit: 2_000_000,
   });
   console.log(`grant Miner Role Transaction Hash: ${grantRole.hash}`);

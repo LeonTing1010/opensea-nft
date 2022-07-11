@@ -11,28 +11,35 @@ contract Crowdsale is AccessControl, PullPayment, Ownable {
     bytes32 public constant CROWD_ROLE = keccak256("CROWD_ROLE");
     NFTERC721A public token;
     bool public opening; // airdrop opening status
-    uint256 public constant TotalSupply = 6888;
+    uint256 public constant TotalSupply = 2000;
     uint256 public constant SLimit = 10; //single mint limit
-    uint256 public constant MLimit = 1000; //mining mint limit
+    uint256 public mLimit = 1000; //mining mint limit
     uint256 public salePrice = 0.15 ether;
     address public collector;
     uint256 public mAmount;
 
     event AirdropStarted(bool opening);
     event SalePriceChanged(uint256 price);
+    event MLimitChanged(uint256 mLimit);
+    event CollectorChanged(address collector);
 
-    constructor(address _collector) {
+    constructor(address _collector, address _nft) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(CROWD_ROLE, msg.sender);
         collector = _collector;
+        token = NFTERC721A(_nft);
     }
 
     function mint(uint256 _amount) external payable {
+        require(
+            token.current() + _amount <= TotalSupply,
+            "Exceeded total supply"
+        );
         require(!opening, "Public sale has ended");
         require(_amount <= SLimit, "Exceeded the single purchase limit");
         require(msg.value == _amount.mul(salePrice), "Payment declined");
         mAmount = mAmount.add(_amount);
-        require(mAmount <= MLimit, "Exceeded the total amount of mining");
+        require(mAmount <= mLimit, "Exceeded the total amount of mining");
 
         _asyncTransfer(collector, msg.value);
         token.mint(msg.sender, _amount);
@@ -53,8 +60,17 @@ contract Crowdsale is AccessControl, PullPayment, Ownable {
         emit SalePriceChanged(salePrice);
     }
 
+    function setMLimit(uint256 _mLimit) external onlyRole(CROWD_ROLE) {
+        mLimit = _mLimit;
+        emit MLimitChanged(mLimit);
+    }
+
     function current() external view returns (uint256) {
         return token.current();
+    }
+
+    function totalMinted() external view returns (uint256) {
+        return mAmount;
     }
 
     function gift(address[] calldata _accounts, uint256[] calldata _quantity)
@@ -66,6 +82,14 @@ contract Crowdsale is AccessControl, PullPayment, Ownable {
             _accounts.length == _quantity.length,
             "The two arrays are not equal in length"
         );
+        uint256 amount;
+        for (uint256 index = 0; index < _quantity.length; index++) {
+            amount = amount.add(_quantity[index]);
+        }
+        require(
+            token.current() + amount <= TotalSupply,
+            "Exceeded total supply"
+        );
         for (uint256 index = 0; index < _accounts.length; index++) {
             token.mint(_accounts[index], _quantity[index]);
         }
@@ -74,6 +98,7 @@ contract Crowdsale is AccessControl, PullPayment, Ownable {
     function setCollector(address _collector) external onlyOwner {
         require(_collector != address(0), "Invalid address");
         collector = _collector;
+        emit CollectorChanged(collector);
     }
 
     function transferRoleAdmin(address newDefaultAdmin)
