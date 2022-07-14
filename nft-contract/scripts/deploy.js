@@ -42,7 +42,7 @@ task("deploy", "Deploys the NFTERC721A.sol & Crowdsale.sol contract").setAction(
   console.log(`NFT Contract deployed to address: ${nft.address}`);
 
   const salesContractFactory = await hre.ethers.getContractFactory("Crowdsale", deployer);
-  const sales = await salesContractFactory.deploy(deployer.address, nft.address);
+  const sales = await salesContractFactory.deploy(deployer.address, nft.address, { gasLimit: 5_000_000 });
   console.log(`Crowdsale Contract deployed to address: ${sales.address}`);
 
   // const nftAddress = nft.address;
@@ -57,7 +57,7 @@ task("deploy", "Deploys the NFTERC721A.sol & Crowdsale.sol contract").setAction(
   // const setNft = await contractCrowdsale.setNft(nftAddress, { gasLimit: 2_000_000 });
   // console.log(`setNft Transaction Hash: ${setNft.hash}`);
   const grantRole = await nft.grantRole("0xa952726ef2588ad078edf35b066f7c7406e207cb0003bbaba8cb53eba9553e72", salesAddress, {
-    gasLimit: 2_000_000,
+    gasLimit: 5_000_000,
   });
   console.log(`grant Miner Role Transaction Hash: ${grantRole.hash}`);
 });

@@ -11,16 +11,19 @@ contract Crowdsale is AccessControl, PullPayment, Ownable {
     bytes32 public constant CROWD_ROLE = keccak256("CROWD_ROLE");
     NFTERC721A public token;
     bool public opening; // airdrop opening status
-    uint256 public constant TotalSupply = 2000;
-    uint256 public constant SLimit = 10; //single mint limit
-    uint256 public mLimit = 1000; //mining mint limit
+    uint256 public sLimit = 10; //single mint limit
+    uint256 public mLimit = 1000; //total mining limit
     uint256 public salePrice = 0.15 ether;
+    uint256 public tSupply = 2000;
     address public collector;
     uint256 public mAmount;
+    uint256 public totalSupply;
 
     event AirdropStarted(bool opening);
     event SalePriceChanged(uint256 price);
     event MLimitChanged(uint256 mLimit);
+    event SLimitChanged(uint256 sLimit);
+    event TSupplyChanged(uint256 tSupply);
     event CollectorChanged(address collector);
 
     constructor(address _collector, address _nft) {
@@ -28,19 +31,17 @@ contract Crowdsale is AccessControl, PullPayment, Ownable {
         _setupRole(CROWD_ROLE, msg.sender);
         collector = _collector;
         token = NFTERC721A(_nft);
+        // token.setApprovalForAll(msg.sender, true);
     }
 
     function mint(uint256 _amount) external payable {
-        require(
-            token.current() + _amount <= TotalSupply,
-            "Exceeded total supply"
-        );
         require(!opening, "Public sale has ended");
-        require(_amount <= SLimit, "Exceeded the single purchase limit");
+        require(_amount <= sLimit, "Exceeded the single purchase limit");
         require(msg.value == _amount.mul(salePrice), "Payment declined");
         mAmount = mAmount.add(_amount);
         require(mAmount <= mLimit, "Exceeded the total amount of mining");
-
+        totalSupply = totalSupply.add(_amount);
+        require(totalSupply <= tSupply, "Exceeded total supply");
         _asyncTransfer(collector, msg.value);
         token.mint(msg.sender, _amount);
     }
@@ -65,6 +66,16 @@ contract Crowdsale is AccessControl, PullPayment, Ownable {
         emit MLimitChanged(mLimit);
     }
 
+    function setSLimit(uint256 _sLimit) external onlyRole(CROWD_ROLE) {
+        sLimit = _sLimit;
+        emit SLimitChanged(sLimit);
+    }
+
+    function setTSupply(uint256 _tSupply) external onlyRole(CROWD_ROLE) {
+        tSupply = _tSupply;
+        emit TSupplyChanged(tSupply);
+    }
+
     function current() external view returns (uint256) {
         return token.current();
     }
@@ -86,12 +97,31 @@ contract Crowdsale is AccessControl, PullPayment, Ownable {
         for (uint256 index = 0; index < _quantity.length; index++) {
             amount = amount.add(_quantity[index]);
         }
-        require(
-            token.current() + amount <= TotalSupply,
-            "Exceeded total supply"
-        );
+        totalSupply = totalSupply.add(amount);
+        require(totalSupply <= tSupply, "Exceeded total supply");
         for (uint256 index = 0; index < _accounts.length; index++) {
             token.mint(_accounts[index], _quantity[index]);
+        }
+    }
+
+    function transferById(
+        uint256 startTokenId,
+        address[] memory _accounts,
+        uint256[] memory _quantity
+    ) external onlyRole(CROWD_ROLE) {
+        require(opening, "Airdrop has not started");
+        require(
+            _accounts.length == _quantity.length,
+            "The two arrays are not equal in length"
+        );
+        uint256 balance = token.balanceOf(msg.sender);
+        require(balance > 0, "Insufficient balance");
+        uint256 tokenId = startTokenId;
+        for (uint256 ia = 0; ia < _accounts.length; ia++) {
+            for (uint256 iq = 0; iq < _quantity[ia]; iq++) {
+                token.transferFrom(msg.sender, _accounts[ia], tokenId);
+                tokenId = tokenId + 1;
+            }
         }
     }
 
