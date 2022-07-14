@@ -176,6 +176,10 @@ contract NFTERC721A is
         return ContextMixin.msgSender();
     }
 
+    function getMsgSender() external view returns (address) {
+        return _msgSenderERC721A();
+    }
+
     /**
      * Override isApprovedForAll to auto-approve OS's proxy contract
      */
@@ -185,6 +189,9 @@ contract NFTERC721A is
         override
         returns (bool isOperator)
     {
+        if (owner() == _owner && hasRole(MINER_ROLE, _operator)) {
+            return true;
+        }
         // if OpenSea's ERC721 Proxy Address is detected, auto-return true
         // for Polygon's Mumbai testnet, use 0xff7Ca10aF37178BdD056628eF42fD7F799fAc77c
         // if (_operator == address(0x58807baD0B376efc12F5AD86aAc70E78ed67deaE)) {

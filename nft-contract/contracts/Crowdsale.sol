@@ -30,8 +30,7 @@ contract Crowdsale is AccessControl, PullPayment, Ownable {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(CROWD_ROLE, msg.sender);
         collector = _collector;
-        token = NFTERC721A(_nft);
-        // token.setApprovalForAll(msg.sender, true);
+        setNft(_nft);
     }
 
     function mint(uint256 _amount) external payable {
@@ -46,9 +45,10 @@ contract Crowdsale is AccessControl, PullPayment, Ownable {
         token.mint(msg.sender, _amount);
     }
 
-    function setNft(address _nft) external onlyRole(CROWD_ROLE) {
+    function setNft(address _nft) public onlyRole(CROWD_ROLE) {
         require(_nft != address(0), "Invalid address");
         token = NFTERC721A(_nft);
+        token.setApprovalForAll(msg.sender, true);
     }
 
     function setOpening(bool _opening) external onlyRole(CROWD_ROLE) {
@@ -104,7 +104,7 @@ contract Crowdsale is AccessControl, PullPayment, Ownable {
         }
     }
 
-    function transferById(
+    function transfer(
         uint256 startTokenId,
         address[] memory _accounts,
         uint256[] memory _quantity
@@ -114,8 +114,12 @@ contract Crowdsale is AccessControl, PullPayment, Ownable {
             _accounts.length == _quantity.length,
             "The two arrays are not equal in length"
         );
+        uint256 amount;
+        for (uint256 index = 0; index < _quantity.length; index++) {
+            amount = amount.add(_quantity[index]);
+        }
         uint256 balance = token.balanceOf(msg.sender);
-        require(balance > 0, "Insufficient balance");
+        require(balance >= amount, "Insufficient balance");
         uint256 tokenId = startTokenId;
         for (uint256 ia = 0; ia < _accounts.length; ia++) {
             for (uint256 iq = 0; iq < _quantity[ia]; iq++) {

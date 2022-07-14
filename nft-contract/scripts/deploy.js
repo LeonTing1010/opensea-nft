@@ -45,7 +45,7 @@ task("deploy", "Deploys the NFTERC721A.sol & Crowdsale.sol contract").setAction(
   const sales = await salesContractFactory.deploy(deployer.address, nft.address, { gasLimit: 5_000_000 });
   console.log(`Crowdsale Contract deployed to address: ${sales.address}`);
 
-  // const nftAddress = nft.address;
+  const nftAddress = nft.address;
   const salesAddress = sales.address;
 
   // const nftAddress = getEnvVariable("NFT_CONTRACT_ADDRESS");
@@ -54,7 +54,7 @@ task("deploy", "Deploys the NFTERC721A.sol & Crowdsale.sol contract").setAction(
   // const contractNFT = await getContract(nftAddress, "NFTERC721A", hre);
   // const contractCrowdsale = await getContract(salesAddress, "Crowdsale", hre);
 
-  // const setNft = await contractCrowdsale.setNft(nftAddress, { gasLimit: 2_000_000 });
+  // const setNft = await sales.setNft(nftAddress, { gasLimit: 5_000_000 });
   // console.log(`setNft Transaction Hash: ${setNft.hash}`);
   const grantRole = await nft.grantRole("0xa952726ef2588ad078edf35b066f7c7406e207cb0003bbaba8cb53eba9553e72", salesAddress, {
     gasLimit: 5_000_000,
