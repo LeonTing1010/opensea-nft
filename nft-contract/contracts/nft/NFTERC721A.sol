@@ -32,7 +32,7 @@ contract NFTERC721A is
     string private collectionURI;
 
     constructor(address _proxyAddress)
-        ERC721A("Renaissance Roar", "ROAR")
+        ERC721A("Renaissance Roar", "ROAR-V3")
         AllowsConfigurableProxy(_proxyAddress, true)
     {
         _initializeEIP712("Renaissance Roar");
