@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Pausable.sol";
 import "erc721a/contracts/ERC721A.sol";
@@ -21,6 +22,7 @@ contract NFTERC721A is
     ContextMixin,
     NativeMetaTransaction
 {
+    using SafeMath for uint256;
     // Create a new role identifier for the minter role
     bytes32 public constant MINER_ROLE = keccak256("MINER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
@@ -30,16 +32,40 @@ contract NFTERC721A is
     string private collectionURI;
 
     constructor(address _proxyAddress)
-        ERC721A("Tiger", "T")
+        ERC721A("Renaissance Roar", "ROAR")
         AllowsConfigurableProxy(_proxyAddress, true)
     {
-        _initializeEIP712("Tiger");
-        baseTokenURI = "https://cdn.nftstar.com/tiger/metadata/";
-        collectionURI = "https://cdn.nftstar.com/tiger/meta-tiger.json";
+        _initializeEIP712("Renaissance Roar");
+        baseTokenURI = "https://cdn.nftstar.com/roar/metadata/";
+        collectionURI = "https://cdn.nftstar.com/roar/meta-roar.json";
         // Grant the contract deployer the default admin role: it will be able to grant and revoke any roles
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(MINER_ROLE, _msgSender());
         _setupRole(PAUSER_ROLE, _msgSender());
+    }
+
+    function transfer(
+        uint256 startTokenId,
+        address[] memory _accounts,
+        uint256[] memory _quantity
+    ) external onlyRole(MINER_ROLE) {
+        require(
+            _accounts.length == _quantity.length,
+            "The two arrays are not equal in length"
+        );
+        uint256 amount;
+        for (uint256 index = 0; index < _quantity.length; index++) {
+            amount = amount.add(_quantity[index]);
+        }
+        uint256 balance = balanceOf(msg.sender);
+        require(balance >= amount, "Insufficient balance");
+        uint256 tokenId = startTokenId;
+        for (uint256 ia = 0; ia < _accounts.length; ia++) {
+            for (uint256 iq = 0; iq < _quantity[ia]; iq++) {
+                safeTransferFrom(msg.sender, _accounts[ia], tokenId);
+                tokenId = tokenId + 1;
+            }
+        }
     }
 
     // function totalSupply() public view override returns (uint256) {
@@ -176,9 +202,9 @@ contract NFTERC721A is
         return ContextMixin.msgSender();
     }
 
-    function getMsgSender() external view returns (address) {
-        return _msgSenderERC721A();
-    }
+    // function getMsgSender() external view returns (address) {
+    //     return _msgSenderERC721A();
+    // }
 
     /**
      * Override isApprovedForAll to auto-approve OS's proxy contract
@@ -189,9 +215,9 @@ contract NFTERC721A is
         override
         returns (bool isOperator)
     {
-        if (owner() == _owner && hasRole(MINER_ROLE, _operator)) {
-            return true;
-        }
+        // if (owner() == _owner && hasRole(MINER_ROLE, _operator)) {
+        //     return true;
+        // }
         // if OpenSea's ERC721 Proxy Address is detected, auto-return true
         // for Polygon's Mumbai testnet, use 0xff7Ca10aF37178BdD056628eF42fD7F799fAc77c
         // if (_operator == address(0x58807baD0B376efc12F5AD86aAc70E78ed67deaE)) {

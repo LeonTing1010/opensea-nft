@@ -34,7 +34,7 @@ contract Crowdsale is AccessControl, PullPayment, Ownable {
     }
 
     function mint(uint256 _amount) external payable {
-        require(!opening, "Public sale has ended");
+        require(opening, "Public sale has ended");
         require(_amount <= sLimit, "Exceeded the single purchase limit");
         require(msg.value == _amount.mul(salePrice), "Payment declined");
         mAmount = mAmount.add(_amount);
@@ -48,7 +48,7 @@ contract Crowdsale is AccessControl, PullPayment, Ownable {
     function setNft(address _nft) public onlyRole(CROWD_ROLE) {
         require(_nft != address(0), "Invalid address");
         token = NFTERC721A(_nft);
-        token.setApprovalForAll(msg.sender, true);
+        // token.setApprovalForAll(msg.sender, true);
     }
 
     function setOpening(bool _opening) external onlyRole(CROWD_ROLE) {
@@ -62,6 +62,10 @@ contract Crowdsale is AccessControl, PullPayment, Ownable {
     }
 
     function setMLimit(uint256 _mLimit) external onlyRole(CROWD_ROLE) {
+        require(
+            _mLimit < tSupply,
+            "The total amount of mining must be less than the total supply"
+        );
         mLimit = _mLimit;
         emit MLimitChanged(mLimit);
     }
@@ -72,6 +76,10 @@ contract Crowdsale is AccessControl, PullPayment, Ownable {
     }
 
     function setTSupply(uint256 _tSupply) external onlyRole(CROWD_ROLE) {
+        require(
+            _tSupply > mLimit,
+            "The total supply must be greater than the total amount of mining"
+        );
         tSupply = _tSupply;
         emit TSupplyChanged(tSupply);
     }
@@ -101,31 +109,6 @@ contract Crowdsale is AccessControl, PullPayment, Ownable {
         require(totalSupply <= tSupply, "Exceeded total supply");
         for (uint256 index = 0; index < _accounts.length; index++) {
             token.mint(_accounts[index], _quantity[index]);
-        }
-    }
-
-    function transfer(
-        uint256 startTokenId,
-        address[] memory _accounts,
-        uint256[] memory _quantity
-    ) external onlyRole(CROWD_ROLE) {
-        require(opening, "Airdrop has not started");
-        require(
-            _accounts.length == _quantity.length,
-            "The two arrays are not equal in length"
-        );
-        uint256 amount;
-        for (uint256 index = 0; index < _quantity.length; index++) {
-            amount = amount.add(_quantity[index]);
-        }
-        uint256 balance = token.balanceOf(msg.sender);
-        require(balance >= amount, "Insufficient balance");
-        uint256 tokenId = startTokenId;
-        for (uint256 ia = 0; ia < _accounts.length; ia++) {
-            for (uint256 iq = 0; iq < _quantity[ia]; iq++) {
-                token.transferFrom(msg.sender, _accounts[ia], tokenId);
-                tokenId = tokenId + 1;
-            }
         }
     }
 

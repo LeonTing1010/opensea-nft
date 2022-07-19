@@ -18,7 +18,7 @@ task("free", "Mints from the NFT contract")
   .setAction(async function (taskArguments, hre) {
     const contract = await getContract(getEnvVariable("NFTA_CONTRACT_ADDRESS"), contractName, hre);
     const transactionResponse = await contract.mint(taskArguments.address, taskArguments.amount, {
-      gasLimit: 20_000_000,
+      gasLimit: 500_000,
     });
     console.log(`Transaction Hash: ${transactionResponse.hash}`);
   });
