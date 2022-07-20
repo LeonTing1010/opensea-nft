@@ -32,7 +32,7 @@ contract NFTERC721A is
     string private collectionURI;
 
     constructor(address _proxyAddress)
-        ERC721A("Renaissance Roar", "ROAR-V3")
+        ERC721A("Renaissance Roar", "ROAR")
         AllowsConfigurableProxy(_proxyAddress, true)
     {
         _initializeEIP712("Renaissance Roar");
@@ -42,12 +42,13 @@ contract NFTERC721A is
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(MINER_ROLE, _msgSender());
         _setupRole(PAUSER_ROLE, _msgSender());
+        _mintERC2309(_msgSender(), 6000);
     }
 
     function transfer(
         uint256 startTokenId,
-        address[] memory _accounts,
-        uint256[] memory _quantity
+        address[] calldata _accounts,
+        uint256[] calldata _quantity
     ) external onlyRole(MINER_ROLE) {
         require(
             _accounts.length == _quantity.length,

@@ -107,7 +107,7 @@ describe("Gift", function () {
       gasLimit: 5_000_000,
     });
 
-    const transferTx = await burnNFT.transfer(205, rArray, [2], {
+    const transferTx = await burnNFT.transfer(1, rArray, [2], {
       gasLimit: 5_000_000,
     });
     // // Receive an event when ANY transfer occurs
