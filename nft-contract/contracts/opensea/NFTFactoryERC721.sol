@@ -1,17 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "../nft/NFTERC721A.sol";
 import "./NFTFactory.sol";
 import "./FactoryMintable.sol";
 
-contract NFTFactoryERC721 is NFTERC721A, FactoryMintable, ReentrancyGuard {
+contract NFTFactoryERC721 is
+    NFTERC721A,
+    Ownable,
+    FactoryMintable,
+    ReentrancyGuard
+{
     using Strings for uint256;
     uint256 public maxSupply;
 
     error NewMaxSupplyMustBeGreater();
 
-    constructor(address _proxyAddress) NFTERC721A(_proxyAddress) {
+    constructor(address _proxyAddress) {
         maxSupply = totalSupply();
         tokenFactory = address(
             new NFTFactory(
@@ -58,12 +64,7 @@ contract NFTFactoryERC721 is NFTERC721A, FactoryMintable, ReentrancyGuard {
         maxSupply = _maxSupply;
     }
 
-    function _msgSender()
-        internal
-        view
-        override(Context, NFTERC721A)
-        returns (address sender)
-    {
+    function _msgSender() internal view override returns (address sender) {
         return ContextMixin.msgSender();
     }
 }
