@@ -120,3 +120,14 @@ task("transfer", "Transfer ownership")
     const transferOwnership = await contractCrowdsale.transferOwnership(taskArguments.owner, { gasLimit: 5_000_000 });
     console.log(`transferOwnership Transaction Hash: ${transferOwnership.hash}`);
   });
+
+task("deploy-lottery", "Deploys the Lottery.sol & RandomNumberGenerator.sol contract").setAction(async function (taskArguments, hre) {
+  const RandomNumberGeneratorContractFactory = await hre.ethers.getContractFactory("RandomNumberGenerator", getAccount());
+  const randomNumberGenerator = await RandomNumberGeneratorContractFactory.deploy(1162, 0x7a1bac17ccc5b313516c5e16fb24f7659aa5ebed, 0x4b09e658ed251bcafeebbc69400383d49f344ace09b9576fe248bb02c003fe9f, { gasLimit: 5_000_000 });
+  //console.log(`Contract deployed to address: ${randomNumberGenerator.address}`);
+
+  const LotteryContractFactory = await hre.ethers.getContractFactory("Lottery", getAccount());
+  const lottery = await LotteryContractFactory.deploy(randomNumberGenerator.address, { gasLimit: 5_000_000 });
+  randomNumberGenerator.transferOwnership(lottery.address);
+  console.log(`LotteryContract deployed to address: ${lottery.address}`);
+});

@@ -19,6 +19,11 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.4.2",
+    "@appliedblockchain/chainlink-contracts": "0.0.4",
+    "@appliedblockchain/chainlink-plugins-fund-link": "0.0.1",
+    "@chainlink/contracts": "^0.4.0",
+    "@chainlink/test-helpers": "^0.0.7-alpha",
+    "@chainlink/token": "^1.1.0",
     "dotenv": "^14.2.0"
   }
 }
