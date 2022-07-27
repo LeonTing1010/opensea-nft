@@ -3,13 +3,14 @@ pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
+// import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./IRandomConsumer.sol";
 import "./RandomNumberGenerator.sol";
+import "./hardhat/console.sol";
 
 contract Lottery is IRandomConsumer, Ownable {
-    using Address for address;
+    // using Address for address;
     using SafeMath for uint256;
 
     uint256 private constant _BITMASK_LOTTERY_ENTRY = (1 << 4) - 1;
@@ -23,13 +24,13 @@ contract Lottery is IRandomConsumer, Ownable {
     struct Entry {
         uint256[] numbers;
         uint256 winnings;
-        bool bonus;
+        uint256 bonus;
     }
-    mapping(uint8 => uint256) bonus;
+    mapping(uint256 => uint256) bonus;
     mapping(address => Entry) entries;
     address[] public stars;
     LotteryState public state;
-    uint256 public numberOfLotteries;
+
     uint256 public winningNumber;
     uint256 public randomNumberRequestId;
     address public randomNumberGenerator;
@@ -64,7 +65,7 @@ contract Lottery is IRandomConsumer, Ownable {
     function getLotterisByAddress(address star)
         external
         view
-        returns (uint256[])
+        returns (Entry memory)
     {
         return entries[star];
     }
@@ -78,8 +79,9 @@ contract Lottery is IRandomConsumer, Ownable {
         );
         entries[msg.sender].numbers.push(lot);
         stars.push(msg.sender);
-        numberOfLotteries++;
+
         emit NewEntry(msg.sender, lot);
+        return lot;
     }
 
     function drawWords() public onlyOwner isState(LotteryState.Open) {
@@ -109,33 +111,36 @@ contract Lottery is IRandomConsumer, Ownable {
     // private
     function _payout() internal {
         // bonus
-        for (uint256 index = 0; index < stars.length(); index++) {
-            Entry entry = entries[stars[index]];
+        for (uint256 index = 0; index < stars.length; index++) {
+            Entry memory entry = entries[stars[index]];
             if (entry.bonus > 0) {
                 payable(stars[index]).transfer(entry.bonus);
             }
         }
     }
 
-    function _calBonus(uint256 _winningNum) public {
+    function _calBonus(uint256 _winningNum) public view {
         uint256 balance = address(this).balance;
         // bits 1
-        for (uint256 e = 0; e < stars.length(); e++) {
-            Entry entry = entries[stars[e]];
-            for (uint256 n = 0; n < entry.numbers.length(); n++) {
-                uint256 lot = (entry.numbers[n] & _BITMASK_LOTTERY_ENTRY) ^
-                    (_winningNum & _BITMASK_LOTTERY_ENTRY);
+        for (uint256 e = 0; e < stars.length; e++) {
+            Entry memory entry = entries[stars[e]];
+            for (uint256 n = 0; n < entry.numbers.length; n++) {
+                uint256 mLot = (entry.numbers[n] & _BITMASK_LOTTERY_ENTRY);
+                uint256 wLot = (_winningNum & _BITMASK_LOTTERY_ENTRY);
+                uint256 lot = mLot ^ wLot;
+                console.log("M=" + mLot + " W=" + wLot);
                 while (lot > 0) {
                     lot = lot & (lot - 1);
                     entry.winnings.add(1);
                 }
+                console.log("Winnings=" + entry.winnings);
             }
         }
         if (balance > 0) {
-            uint256 len = stars.length();
+            uint256 len = stars.length;
             // bonus
             for (uint256 index = 0; index < len; index++) {
-                Entry entry = entries[stars[index]];
+                Entry memory entry = entries[stars[index]];
                 if (entry.winnings > 0) {
                     entry.bonus = balance.mul(
                         bonus[entry.winnings].div(10**18)

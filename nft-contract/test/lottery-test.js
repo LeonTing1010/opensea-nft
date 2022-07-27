@@ -1,3 +1,4 @@
+const { BigNumber } = require("ethers");
 const { getContract, getEnvVariable, getAccount, getBurnAccount, getProvider } = require("./helpers");
 
 describe("Lottery", function () {
@@ -9,33 +10,22 @@ describe("Lottery", function () {
     console.log("Lottery=" + Lottery.address);
   });
 
-  it("submitNumber", async function () {
-    for (var i = 1; i <= 3; i++) {
-      await Lottery.submitNumber(i, {
-        gasLimit: 5_000_000,
-      });
-    }
-    const numberOfEntries = await Lottery.numberOfEntries();
-    console.log("numberOfEntries=" + numberOfEntries);
-
-    // Receive an event when ANY submitNumber occurs
-    Lottery.on("NewEntry", (player, number, event) => {
-      console.log(`${player} submitNumber ${number}`);
-      // The event object contains the verbatim log data, the
-      // EventFragment and functions to fetch the block,
-      // transaction and receipt and event functions
-    });
-  });
-  it("drawNumber", async function () {
-    await Lottery.drawNumber({
+  it("lottery", async function () {
+    const lot = await Lottery.lottery({
       gasLimit: 5_000_000,
     });
-    // Receive an event when ANY submitNumber occurs
-    Lottery.on("NumberRequested", (requestId, event) => {
-      console.log(`NumberRequested ${requestId}`);
-      // The event object contains the verbatim log data, the
-      // EventFragment and functions to fetch the block,
-      // transaction and receipt and event functions
+    const cr = await lot.wait();
+
+    for (const event of cr.events) {
+      console.log(JSON.stringify(event));
+    }
+  });
+  it("calBonus", async function () {
+    await Lottery._calBonus(BigNumber.from("51356296693424209065891468090882710476502733463141498304978975329108673582233"), {
+      gasLimit: 5_000_000,
     });
+
+    const tx = await Lottery.getLotterisByAddress(getAccount().address);
+    console.log("getLotterisByAddress=" + tx);
   });
 });

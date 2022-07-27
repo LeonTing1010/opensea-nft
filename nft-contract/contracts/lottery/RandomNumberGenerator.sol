@@ -40,7 +40,6 @@ contract RandomNumberGenerator is VRFConsumerBaseV2, Ownable {
     uint256 public s_requestId;
 
     event ReturnedRandomness(uint256[] randomWords);
-    event ChangedNumWords(uint32 _num);
 
     /**
      * @param _keyHash 0x4b09e658ed251bcafeebbc69400383d49f344ace09b9576fe248bb02c003fe9f
@@ -55,11 +54,6 @@ contract RandomNumberGenerator is VRFConsumerBaseV2, Ownable {
         COORDINATOR = VRFCoordinatorV2Interface(_vrfCoordinator);
         s_keyHash = _keyHash;
         s_subscriptionId = subscriptionId;
-    }
-
-    function setNumWords(uint32 _num) external {
-        num_words = _num;
-        emit ChangedNumWords(num_words);
     }
 
     /**
