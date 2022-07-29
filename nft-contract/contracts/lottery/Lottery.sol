@@ -12,10 +12,11 @@ contract Lottery is IRandomConsumer, Ownable {
     using Address for address;
     using SafeMath for uint256;
     using EnumerableSet for EnumerableSet.AddressSet;
-
-    uint8 private _BITPOS = 8;
-    uint256 private _BITMASK_LOTTERY_ENTRY = (1 << 8) - 1;
+    bytes32 public constant LOTTERY_ROLE = keccak256("LOTTERY_ROLE");
     uint256 private constant _BITPOS_LOTTERY_ENTRY = (1 << 4) - 1;
+    uint256 private _BITMASK_LOTTERY_ENTRY = (1 << 28) - 1;
+    uint8 private _BITPOS = 28;
+
     enum LotteryState {
         Open,
         Closed,
@@ -35,16 +36,21 @@ contract Lottery is IRandomConsumer, Ownable {
     LotteryState public state;
 
     uint256 public winningNumber;
-    uint256 public randomNumberRequestId;
+    uint256 private randomNumberRequestId;
     address public randomNumberGenerator;
     uint256 public phase;
 
     event LotteryStateChanged(LotteryState newState);
-    event NewEntry(address player, uint256 number);
+    event NewEntry(address indexed player, uint256 number);
     event NumberRequested(uint256 requestId);
     event NumberDrawn(uint256 requestId, uint256 winningNumber);
     event BitMaskChanged(uint8 bits);
-    event Bonus(uint256 phase, address from, address to, uint256 bonus);
+    event Bonus(
+        uint256 indexed phase,
+        address indexed from,
+        address indexed to,
+        uint256 bonus
+    );
 
     //modifiers
     modifier isState(LotteryState _state) {
@@ -89,17 +95,17 @@ contract Lottery is IRandomConsumer, Ownable {
         return bonus[_ws];
     }
 
-    function getBits() external view returns (uint256) {
-        return _BITPOS % 4;
+    function getLength() external view returns (uint256) {
+        return _BITPOS / 4;
     }
 
-    function setBitMask(uint8 _bits)
+    function setLength(uint8 _length)
         public
         onlyOwner
         isState(LotteryState.Open)
     {
-        require(_bits % 4 == 0 && _bits <= 256, "Invalid bytes");
-        _BITPOS = _bits;
+        require(_length >= 1 && _length <= 84, "Invalid Number");
+        _BITPOS = _length * 4;
         _BITMASK_LOTTERY_ENTRY = (1 << _BITPOS) - 1;
         emit BitMaskChanged(_BITPOS);
     }
@@ -129,26 +135,32 @@ contract Lottery is IRandomConsumer, Ownable {
     }
 
     //onlyOwner
-    function lottery() public isState(LotteryState.Open) returns (uint256) {
+    function twist(address _star)
+        external
+        isState(LotteryState.Open)
+        onlyOwner
+        returns (uint256)
+    {
         uint256 lot = uint256(
             keccak256(
                 abi.encodePacked(
                     block.difficulty,
                     block.timestamp,
-                    msg.sender,
+                    _star,
                     phase
                 )
             )
         );
-        entries[msg.sender].numbers.push(lot);
-        stars.add(msg.sender);
+        entries[_star].numbers.push(lot);
+        stars.add(_star);
 
-        emit NewEntry(msg.sender, lot);
+        emit NewEntry(_star, lot);
         return lot;
     }
 
-    function drawWords() public onlyOwner isState(LotteryState.Open) {
+    function draw() external onlyOwner isState(LotteryState.Open) {
         require(stars.length() > 0, "Nobody holds a lottery");
+        require(address(this).balance > 0, "Insufficient balance");
         _changeState(LotteryState.Closed);
         randomNumberRequestId = RandomNumberGenerator(randomNumberGenerator)
             .requestRandomWords();

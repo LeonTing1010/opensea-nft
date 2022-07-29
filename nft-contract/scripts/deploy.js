@@ -136,4 +136,9 @@ task("deploy-welfare", "Deploys the WelfareFoctory.sol").setAction(async functio
   const WelfareFoctoryContractFactory = await hre.ethers.getContractFactory("WelfareFoctory", getAccount());
   const welfareFoctory = await WelfareFoctoryContractFactory.deploy(1162, "0x7a1bac17ccc5b313516c5e16fb24f7659aa5ebed", "0x4b09e658ed251bcafeebbc69400383d49f344ace09b9576fe248bb02c003fe9f", { gasLimit: 5_000_000 });
   console.log(`WelfareFoctoryContract deployed to address: ${welfareFoctory.address}`);
+  //await welfareFoctory.wait();
+  await hre.run("verify:verify", {
+    address: welfareFoctory,
+    constructorArguments: [1162, "0x7a1bac17ccc5b313516c5e16fb24f7659aa5ebed", "0x4b09e658ed251bcafeebbc69400383d49f344ace09b9576fe248bb02c003fe9f"],
+  });
 });

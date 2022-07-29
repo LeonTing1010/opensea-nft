@@ -3,6 +3,7 @@ require("@nomiclabs/hardhat-ethers");
 require("./scripts/deploy.js");
 require("./scripts/mint.js");
 require("./scripts/crowdsale.js");
+require("./scripts/welfare.js");
 require("@nomiclabs/hardhat-etherscan");
 // require("hardhat-gas-reporter");
 

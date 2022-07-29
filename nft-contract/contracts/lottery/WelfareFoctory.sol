@@ -9,6 +9,7 @@ contract WelfareFoctory is Ownable {
     uint64 subId;
     address vrfCoordinator;
     bytes32 keyHash;
+    uint256 public phase;
 
     event NewLottery(address lottery);
 
@@ -22,21 +23,19 @@ contract WelfareFoctory is Ownable {
         keyHash = _keyHash;
     }
 
-    function newLottery(uint256 phase, uint8 bits)
-        external
-        onlyOwner
-        returns (address)
-    {
-        require(phases[phase] == address(0), "Current lottery already exists");
+    function newLottery(uint8 _length) external onlyOwner returns (address) {
+        phase = phase + 1;
         Lottery lottery = new Lottery(phase, subId, vrfCoordinator, keyHash);
-        lottery.setBitMask(bits);
+        if (lottery.getLength() != _length) {
+            lottery.setLength(_length);
+        }
         lottery.transferOwnership(msg.sender);
         phases[phase] = address(lottery);
         emit NewLottery(address(lottery));
         return address(lottery);
     }
 
-    function getLottery(uint256 phase) external view returns (address) {
-        return phases[phase];
+    function getLottery(uint256 _phase) external view returns (address) {
+        return phases[_phase];
     }
 }
