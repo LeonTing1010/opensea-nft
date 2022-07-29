@@ -121,24 +121,32 @@ task("transfer", "Transfer ownership")
     console.log(`transferOwnership Transaction Hash: ${transferOwnership.hash}`);
   });
 
-task("deploy-lottery", "Deploys the Lottery.sol & RandomNumberGenerator.sol contract").setAction(async function (taskArguments, hre) {
-  const RandomNumberGeneratorContractFactory = await hre.ethers.getContractFactory("RandomNumberGenerator", getAccount());
-  const randomNumberGenerator = await RandomNumberGeneratorContractFactory.deploy(1162, "0x7a1bac17ccc5b313516c5e16fb24f7659aa5ebed", "0x4b09e658ed251bcafeebbc69400383d49f344ace09b9576fe248bb02c003fe9f", { gasLimit: 5_000_000 });
-  console.log(`RandomNumberGeneratorContract deployed to address: ${randomNumberGenerator.address}`);
+// task("deploy-lottery", "Deploys the Lottery.sol & RandomNumberGenerator.sol contract").setAction(async function (taskArguments, hre) {
+//   const RandomNumberGeneratorContractFactory = await hre.ethers.getContractFactory("RandomNumberGenerator", getAccount());
+//   const randomNumberGenerator = await RandomNumberGeneratorContractFactory.deploy(1162, "0x7a1bac17ccc5b313516c5e16fb24f7659aa5ebed", "0x4b09e658ed251bcafeebbc69400383d49f344ace09b9576fe248bb02c003fe9f", { gasLimit: 5_000_000 });
+//   console.log(`RandomNumberGeneratorContract deployed to address: ${randomNumberGenerator.address}`);
 
-  const LotteryContractFactory = await hre.ethers.getContractFactory("Lottery", getAccount());
-  const lottery = await LotteryContractFactory.deploy(randomNumberGenerator.address, { gasLimit: 5_000_000 });
-  randomNumberGenerator.transferOwnership(lottery.address);
-  console.log(`LotteryContract deployed to address: ${lottery.address}`);
-});
+//   const LotteryContractFactory = await hre.ethers.getContractFactory("Lottery", getAccount());
+//   const lottery = await LotteryContractFactory.deploy(randomNumberGenerator.address, { gasLimit: 5_000_000 });
+//   randomNumberGenerator.transferOwnership(lottery.address);
+//   console.log(`LotteryContract deployed to address: ${lottery.address}`);
+// });
 
+// https://vrf.chain.link/ mumbai
 task("deploy-welfare", "Deploys the WelfareFoctory.sol").setAction(async function (taskArguments, hre) {
   const WelfareFoctoryContractFactory = await hre.ethers.getContractFactory("WelfareFoctory", getAccount());
-  const welfareFoctory = await WelfareFoctoryContractFactory.deploy(1162, "0x7a1bac17ccc5b313516c5e16fb24f7659aa5ebed", "0x4b09e658ed251bcafeebbc69400383d49f344ace09b9576fe248bb02c003fe9f", { gasLimit: 5_000_000 });
+  const arguments = [getEnvVariable("SUB_ID"), getEnvVariable("VRF"), getEnvVariable("KEY_HASH")];
+  const welfareFoctory = await WelfareFoctoryContractFactory.deploy(arguments[0], arguments[1], arguments[2], { gasLimit: 5_000_000 });
   console.log(`WelfareFoctoryContract deployed to address: ${welfareFoctory.address}`);
   await welfareFoctory.deployed();
   await hre.run("verify:verify", {
     address: welfareFoctory,
-    constructorArguments: [1162, "0x7a1bac17ccc5b313516c5e16fb24f7659aa5ebed", "0x4b09e658ed251bcafeebbc69400383d49f344ace09b9576fe248bb02c003fe9f"],
+    constructorArguments: [getEnvVariable("SUB_ID"), getEnvVariable("VRF"), getEnvVariable("KEY_HASH")],
+  });
+});
+task("verify-welfare", "Verify the WelfareFoctory.sol").setAction(async function (taskArguments, hre) {
+  await hre.run("verify:verify", {
+    address: getEnvVariable("WELFAREFOCTORY_CONTRACT_ADDRESS"),
+    constructorArguments: [getEnvVariable("SUB_ID"), getEnvVariable("VRF"), getEnvVariable("KEY_HASH")],
   });
 });

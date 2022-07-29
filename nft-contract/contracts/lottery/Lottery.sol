@@ -12,7 +12,6 @@ contract Lottery is IRandomConsumer, Ownable {
     using Address for address;
     using SafeMath for uint256;
     using EnumerableSet for EnumerableSet.AddressSet;
-    bytes32 public constant LOTTERY_ROLE = keccak256("LOTTERY_ROLE");
     uint256 private constant _BITPOS_LOTTERY_ENTRY = (1 << 4) - 1;
     uint256 private _BITMASK_LOTTERY_ENTRY = (1 << 28) - 1;
     uint8 private _BITPOS = 28;
@@ -41,27 +40,23 @@ contract Lottery is IRandomConsumer, Ownable {
     uint256 public phase;
 
     event LotteryStateChanged(LotteryState newState);
+    event NumberGeneratorChanged(address generator);
     event NewEntry(address indexed player, uint256 number);
     event NumberRequested(uint256 requestId);
     event NumberDrawn(uint256 requestId, uint256 winningNumber);
     event BitMaskChanged(uint8 bits);
-    event Bonus(
-        uint256 indexed phase,
-        address indexed from,
-        address indexed to,
-        uint256 bonus
-    );
+    event Bonus(address indexed to, uint256 bonus);
 
     //modifiers
     modifier isState(LotteryState _state) {
-        require(state == _state, "Wrong state for this action");
+        require(state == _state, "Lottery: Wrong state for this action");
         _;
     }
 
     modifier onlyRandomGenerator() {
         require(
             msg.sender == randomNumberGenerator,
-            "Must be correct generator"
+            "Lottery: Must be correct generator"
         );
         _;
     }
@@ -81,14 +76,26 @@ contract Lottery is IRandomConsumer, Ownable {
     }
 
     //functions
-    function setProportion(uint8 _ws, uint256 _proportion)
+    function setRandomNumberGenerator(address _randomNumberGenerator)
+        external
+        onlyOwner
+    {
+        require(
+            _randomNumberGenerator != address(0),
+            "Lottery: Invalid generator"
+        );
+        randomNumberGenerator = _randomNumberGenerator;
+        emit NumberGeneratorChanged(randomNumberGenerator);
+    }
+
+    function setProportion(uint8 _luckyNumbers, uint256 _proportion)
         public
         onlyOwner
         isState(LotteryState.Open)
     {
-        require(_ws > 0, "Invalid bits of winning");
-        require(_proportion <= 1 ether, "Invalid proportion");
-        bonus[_ws] = _proportion;
+        require(_luckyNumbers > 0, "Lottery: Invalid lucky numbers");
+        require(_proportion <= 1 ether, "Lottery: Invalid proportion");
+        bonus[_luckyNumbers] = _proportion;
     }
 
     function getProportion(uint8 _ws) public view returns (uint256) {
@@ -104,7 +111,7 @@ contract Lottery is IRandomConsumer, Ownable {
         onlyOwner
         isState(LotteryState.Open)
     {
-        require(_length >= 1 && _length <= 84, "Invalid Number");
+        require(_length >= 1 && _length <= 84, "Lottery: Invalid length");
         _BITPOS = _length * 4;
         _BITMASK_LOTTERY_ENTRY = (1 << _BITPOS) - 1;
         emit BitMaskChanged(_BITPOS);
@@ -159,8 +166,8 @@ contract Lottery is IRandomConsumer, Ownable {
     }
 
     function draw() external onlyOwner isState(LotteryState.Open) {
-        require(stars.length() > 0, "Nobody holds a lottery");
-        require(address(this).balance > 0, "Insufficient balance");
+        require(stars.length() > 0, "Lottery: Nobody holds a lottery");
+        require(address(this).balance > 0, "Lottery: Insufficient balance");
         _changeState(LotteryState.Closed);
         randomNumberRequestId = RandomNumberGenerator(randomNumberGenerator)
             .requestRandomWords();
@@ -183,10 +190,9 @@ contract Lottery is IRandomConsumer, Ownable {
         }
     }
 
-    function _payoutBonus(uint256 _winningNum) private {
-        uint256 len = stars.length();
+    function _calWinnings(uint256 _winningNum, uint256 _len) private {
         // bits 1
-        for (uint256 e = 0; e < len; e++) {
+        for (uint256 e = 0; e < _len; e++) {
             address star = stars.at(e);
             Entry memory entry = entries[star];
             entry.winnings = 0;
@@ -208,46 +214,59 @@ contract Lottery is IRandomConsumer, Ownable {
                 entries[star] = entry;
             }
         }
+    }
+
+    function _calBonus(uint256 _balance, uint256 _len) private {
+        uint256 bigBonus = _balance;
+        // bonus
+        for (uint256 index = 0; index < _len && _balance > 0; index++) {
+            address star = stars.at(index);
+            Entry memory entry = entries[star];
+            uint256 _bonus = 0;
+            uint8 bits = entry.winnings;
+            if (bits > 0 && bonus[bits] > 0) {
+                _bonus = bigBonus.mul(bonus[bits]).div(1 ether);
+                if (_bonus > 0) {
+                    entry.bonus = _bonus;
+                    entries[star] = entry;
+                    _balance = _balance.sub(_bonus);
+                }
+            }
+        }
+        if (_balance > 0) {
+            // left balance
+            uint _left = _balance.div(_len);
+            for (uint256 index = 0; index < _len; index++) {
+                Entry memory entry = entries[stars.at(index)];
+                entry.bonus = entry.bonus.add(_left);
+                entries[stars.at(index)] = entry;
+            }
+        }
+    }
+
+    function _payout(uint256 _len) private {
+        // payout
+        for (uint256 index = 0; index < _len; index++) {
+            address star = stars.at(index);
+            Entry memory entry = entries[star];
+            if (entry.bonus > 0 && !entry.finished) {
+                uint256 _bonus = entry.bonus;
+                // entry.bonus = 0;
+                entry.finished = true;
+                entries[star] = entry;
+                payable(star).transfer(_bonus);
+                emit Bonus(star, _bonus);
+            }
+        }
+    }
+
+    function _payoutBonus(uint256 _winningNum) private {
+        uint256 len = stars.length();
+        _calWinnings(_winningNum, len);
         uint256 balance = address(this).balance;
         if (balance > 0) {
-            uint256 bigBonus = balance;
-            // bonus
-            for (uint256 index = 0; index < len && balance > 0; index++) {
-                address star = stars.at(index);
-                Entry memory entry = entries[star];
-                uint256 _bonus = 0;
-                uint8 bits = entry.winnings;
-                if (bits > 0 && bonus[bits] > 0) {
-                    _bonus = bigBonus.mul(bonus[bits]).div(1 ether);
-                    if (_bonus > 0) {
-                        entry.bonus = _bonus;
-                        entries[star] = entry;
-                        balance = balance.sub(_bonus);
-                    }
-                }
-            }
-            if (balance > 0) {
-                // left balance
-                uint _left = balance.div(len);
-                for (uint256 index = 0; index < len; index++) {
-                    Entry memory entry = entries[stars.at(index)];
-                    entry.bonus = entry.bonus.add(_left);
-                    entries[stars.at(index)] = entry;
-                }
-            }
-            // payout
-            for (uint256 index = 0; index < len; index++) {
-                address star = stars.at(index);
-                Entry memory entry = entries[star];
-                if (entry.bonus > 0 && !entry.finished) {
-                    uint256 _bonus = entry.bonus;
-                    // entry.bonus = 0;
-                    entry.finished = true;
-                    entries[star] = entry;
-                    payable(star).transfer(_bonus);
-                    emit Bonus(phase, address(this), star, _bonus);
-                }
-            }
+            _calBonus(balance, len);
+            _payout(len);
         }
     }
 
