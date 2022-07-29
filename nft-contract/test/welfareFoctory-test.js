@@ -68,14 +68,14 @@
 //       console.log(BigNumber.from(l.toString()).toHexString());
 //     }
 //     console.log("lucky= " + (await Lottery.getWiningsByAddress(lucky.address)).toBigInt());
-//     console.log("lucky= ", ethers.utils.formatEther(await Lottery.getBonusByAddress(lucky.address)));
+//     console.log("lucky= ", ethers.utils.formatEther(await Lottery.getPrizeByAddress(lucky.address)));
 
 //     console.log("----OLucky Lotteries----");
 //     for (const l of await await Lottery.getLotterisByAddress(olucky.address)) {
 //       console.log(BigNumber.from(l.toString()).toHexString());
 //     }
 //     console.log("olucky= " + (await Lottery.getWiningsByAddress(olucky.address)).toBigInt());
-//     console.log("olucky= ", ethers.utils.formatEther(await Lottery.getBonusByAddress(olucky.address)));
+//     console.log("olucky= ", ethers.utils.formatEther(await Lottery.getPrizeByAddress(olucky.address)));
 
 //     console.log("contract left balance= " + ethers.utils.formatEther(await ethers.provider.getBalance(Lottery.address)));
 //   });
@@ -89,14 +89,14 @@
 //   //     console.log(BigNumber.from(l.toString()).toHexString());
 //   //   }
 //   //   console.log("lucky= " + (await Lottery.getWiningsByAddress(lucky.address)).toBigInt());
-//   //   console.log("lucky= ", ethers.utils.formatEther(await Lottery.getBonusByAddress(lucky.address)));
+//   //   console.log("lucky= ", ethers.utils.formatEther(await Lottery.getPrizeByAddress(lucky.address)));
 
 //   //   console.log("----OLucky Lotteries----");
 //   //   for (const l of await await Lottery.getLotterisByAddress(olucky.address)) {
 //   //     console.log(BigNumber.from(l.toString()).toHexString());
 //   //   }
 //   //   console.log("olucky= " + (await Lottery.getWiningsByAddress(olucky.address)).toBigInt());
-//   //   console.log("olucky= ", ethers.utils.formatEther(await Lottery.getBonusByAddress(olucky.address)));
+//   //   console.log("olucky= ", ethers.utils.formatEther(await Lottery.getPrizeByAddress(olucky.address)));
 
 //   //   console.log("contract left balance= " + ethers.utils.formatEther(await ethers.provider.getBalance(Lottery.address)));
 //   // });

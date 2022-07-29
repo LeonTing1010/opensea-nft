@@ -56,20 +56,20 @@ describe("Lottery", function () {
     console.log("contract balance= " + ethers.utils.formatEther(await ethers.provider.getBalance(Lottery.address)));
     const wn = BigNumber.from("0xa3195b98ca25888e443ed56fe8f1e5e958ad97099a69fe8ef4502974ead314a9");
     console.log("WiningNumber= " + wn.toHexString());
-    await Lottery._payoutBonus(wn, gas);
+    await Lottery._payoutPrize(wn, gas);
     console.log("----Lucky Lotteries----");
     for (const l of await await Lottery.getLotterisByAddress(lucky.address)) {
       console.log(BigNumber.from(l.toString()).toHexString());
     }
     console.log("lucky= " + (await Lottery.getWiningsByAddress(lucky.address)).toBigInt());
-    console.log("lucky= ", ethers.utils.formatEther(await Lottery.getBonusByAddress(lucky.address)));
+    console.log("lucky= ", ethers.utils.formatEther(await Lottery.getPrizeByAddress(lucky.address)));
 
     console.log("----OLucky Lotteries----");
     for (const l of await await Lottery.getLotterisByAddress(olucky.address)) {
       console.log(BigNumber.from(l.toString()).toHexString());
     }
     console.log("olucky= " + (await Lottery.getWiningsByAddress(olucky.address)).toBigInt());
-    console.log("olucky= ", ethers.utils.formatEther(await Lottery.getBonusByAddress(olucky.address)));
+    console.log("olucky= ", ethers.utils.formatEther(await Lottery.getPrizeByAddress(olucky.address)));
 
     console.log("contract left balance= " + ethers.utils.formatEther(await ethers.provider.getBalance(Lottery.address)));
   });
