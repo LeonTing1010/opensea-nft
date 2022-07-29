@@ -24,11 +24,11 @@ contract Lottery is IRandomConsumer, Ownable {
 
     struct Entry {
         uint256[] numbers;
-        uint256 bonus;
+        uint256 prize;
         uint8 winnings;
         bool finished;
     }
-    mapping(uint8 => uint256) bonus;
+    mapping(uint8 => uint256) prize;
     mapping(address => Entry) entries;
     EnumerableSet.AddressSet private stars;
 
@@ -45,7 +45,7 @@ contract Lottery is IRandomConsumer, Ownable {
     event NumberRequested(uint256 requestId);
     event NumberDrawn(uint256 requestId, uint256 winningNumber);
     event BitMaskChanged(uint8 bits);
-    event Bonus(address indexed to, uint256 bonus);
+    event Prize(address indexed to, uint256 prize);
 
     //modifiers
     modifier isState(LotteryState _state) {
@@ -95,11 +95,11 @@ contract Lottery is IRandomConsumer, Ownable {
     {
         require(_luckyNumbers > 0, "Lottery: Invalid lucky numbers");
         require(_proportion <= 1 ether, "Lottery: Invalid proportion");
-        bonus[_luckyNumbers] = _proportion;
+        prize[_luckyNumbers] = _proportion;
     }
 
     function getProportion(uint8 _ws) public view returns (uint256) {
-        return bonus[_ws];
+        return prize[_ws];
     }
 
     function getLength() external view returns (uint256) {
@@ -133,8 +133,8 @@ contract Lottery is IRandomConsumer, Ownable {
         return entries[star].winnings;
     }
 
-    function getBonusByAddress(address star) external view returns (uint256) {
-        return entries[star].bonus;
+    function getPrizeByAddress(address star) external view returns (uint256) {
+        return entries[star].prize;
     }
 
     function getFinishedByAddress(address star) external view returns (bool) {
@@ -186,7 +186,7 @@ contract Lottery is IRandomConsumer, Ownable {
             _changeState(LotteryState.Finished);
             winningNumber = _randomWords[0];
             emit NumberDrawn(_randomNumberRequestId, winningNumber);
-            _payoutBonus(winningNumber);
+            _payoutPrize(winningNumber);
         }
     }
 
@@ -196,7 +196,7 @@ contract Lottery is IRandomConsumer, Ownable {
             address star = stars.at(e);
             Entry memory entry = entries[star];
             entry.winnings = 0;
-            entry.bonus = 0;
+            entry.prize = 0;
             for (uint256 n = 0; n < entry.numbers.length; n++) {
                 uint256 mLot = (entry.numbers[n] & _BITMASK_LOTTERY_ENTRY);
                 uint256 wLot = (_winningNum & _BITMASK_LOTTERY_ENTRY);
@@ -216,20 +216,20 @@ contract Lottery is IRandomConsumer, Ownable {
         }
     }
 
-    function _calBonus(uint256 _balance, uint256 _len) private {
-        uint256 bigBonus = _balance;
-        // bonus
+    function _calPrize(uint256 _balance, uint256 _len) private {
+        uint256 bigPrize = _balance;
+        // prize
         for (uint256 index = 0; index < _len && _balance > 0; index++) {
             address star = stars.at(index);
             Entry memory entry = entries[star];
-            uint256 _bonus = 0;
+            uint256 _prize = 0;
             uint8 bits = entry.winnings;
-            if (bits > 0 && bonus[bits] > 0) {
-                _bonus = bigBonus.mul(bonus[bits]).div(1 ether);
-                if (_bonus > 0) {
-                    entry.bonus = _bonus;
+            if (bits > 0 && prize[bits] > 0) {
+                _prize = bigPrize.mul(prize[bits]).div(1 ether);
+                if (_prize > 0) {
+                    entry.prize = _prize;
                     entries[star] = entry;
-                    _balance = _balance.sub(_bonus);
+                    _balance = _balance.sub(_prize);
                 }
             }
         }
@@ -238,7 +238,7 @@ contract Lottery is IRandomConsumer, Ownable {
             uint _left = _balance.div(_len);
             for (uint256 index = 0; index < _len; index++) {
                 Entry memory entry = entries[stars.at(index)];
-                entry.bonus = entry.bonus.add(_left);
+                entry.prize = entry.prize.add(_left);
                 entries[stars.at(index)] = entry;
             }
         }
@@ -249,23 +249,23 @@ contract Lottery is IRandomConsumer, Ownable {
         for (uint256 index = 0; index < _len; index++) {
             address star = stars.at(index);
             Entry memory entry = entries[star];
-            if (entry.bonus > 0 && !entry.finished) {
-                uint256 _bonus = entry.bonus;
-                // entry.bonus = 0;
+            if (entry.prize > 0 && !entry.finished) {
+                uint256 _prize = entry.prize;
+                // entry.prize = 0;
                 entry.finished = true;
                 entries[star] = entry;
-                payable(star).transfer(_bonus);
-                emit Bonus(star, _bonus);
+                payable(star).transfer(_prize);
+                emit Prize(star, _prize);
             }
         }
     }
 
-    function _payoutBonus(uint256 _winningNum) private {
+    function _payoutPrize(uint256 _winningNum) private {
         uint256 len = stars.length();
         _calWinnings(_winningNum, len);
         uint256 balance = address(this).balance;
         if (balance > 0) {
-            _calBonus(balance, len);
+            _calPrize(balance, len);
             _payout(len);
         }
     }
