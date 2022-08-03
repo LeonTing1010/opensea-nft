@@ -12,12 +12,12 @@
 //   let olucky = getBurnAccount();
 
 //   beforeEach(async function () {
-//     const WelfareFoctory = await getContract(getEnvVariable("WELFAREFOCTORY_CONTRACT_ADDRESS"), "WelfareFoctory", lucky, hre);
-//     console.log("WelfareFoctory=>" + WelfareFoctory.address);
-//     const lot = await WelfareFoctory.getLottery(1);
+//     const WelfareFactory = await getContract(getEnvVariable("WELFAREFACTORY_CONTRACT_ADDRESS"), "WelfareFactory", lucky, hre);
+//     console.log("WelfareFactory=>" + WelfareFactory.address);
+//     const lot = await WelfareFactory.getLottery(1);
 //     console.log("Lottery=>" + lot);
 //     console.log("New Lottery=>" + 1);
-//     // await WelfareFoctory.newLottery(1, 4);
+//     // await WelfareFactory.newLottery(1, 4);
 //     Lottery = await getContract(lot, "Lottery", lucky, hre);
 //     console.log("Lottery=>" + Lottery.address);
 //     OLottery = Lottery.connect(olucky);

@@ -13,7 +13,7 @@ contract Lottery is IRandomConsumer, Ownable {
     using SafeMath for uint256;
     using EnumerableSet for EnumerableSet.AddressSet;
     uint256 private constant _BITPOS_LOTTERY_ENTRY = (1 << 4) - 1;
-    uint256 private _BITMASK_LOTTERY_ENTRY = (1 << 28) - 1;
+    // uint256 private _BITMASK_LOTTERY_ENTRY = (1 << 28) - 1;
     uint8 private _BITPOS = 28;
 
     enum LotteryState {
@@ -21,17 +21,22 @@ contract Lottery is IRandomConsumer, Ownable {
         Closed,
         Finished
     }
-
     struct Ticket {
-        uint256[] numbers;
-        uint256 prize;
-        uint8 winnings;
-        bool finished;
+        uint256 number;
+        address star;
     }
-    mapping(uint8 => uint256) prize;
-    mapping(address => Ticket) tickets;
+    struct Winning {
+        address star;
+        uint8 ws;
+        uint256 prize;
+    }
+    uint256 public numberOfTickets;
     EnumerableSet.AddressSet private stars;
-
+    mapping(uint8 => uint256) proportions;
+    mapping(address => uint256[]) tickets;
+    mapping(uint256 => Winning) number2Winning;
+    mapping(uint8 => Ticket[]) prize2Tickets;
+    mapping(address => uint256) star2Prize;
     LotteryState public state;
 
     uint256 public winningNumber;
@@ -45,7 +50,13 @@ contract Lottery is IRandomConsumer, Ownable {
     event NumberRequested(uint256 requestId);
     event NumberDrawn(uint256 requestId, uint256 winningNumber);
     event BitMaskChanged(uint8 bits);
-    event Prize(address indexed to, uint256 prize);
+    event Prize(
+        address indexed to,
+        uint8 indexed ws,
+        uint256 prize,
+        uint256 number
+    );
+    event Received(address sender, uint256 value);
 
     //modifiers
     modifier isState(LotteryState _state) {
@@ -76,69 +87,24 @@ contract Lottery is IRandomConsumer, Ownable {
     }
 
     //functions
-    function setRandomNumberGenerator(address _randomNumberGenerator)
-        external
-        onlyOwner
-    {
-        require(
-            _randomNumberGenerator != address(0),
-            "Lottery: Invalid generator"
-        );
-        randomNumberGenerator = _randomNumberGenerator;
-        emit NumberGeneratorChanged(randomNumberGenerator);
-    }
-
-    function setProportion(uint8 _luckyNumbers, uint256 _proportion)
-        public
-        onlyOwner
-        isState(LotteryState.Open)
-    {
-        require(_luckyNumbers > 0, "Lottery: Invalid lucky numbers");
-        require(_proportion <= 1 ether, "Lottery: Invalid proportion");
-        prize[_luckyNumbers] = _proportion;
-    }
-
-    function getProportion(uint8 _ws) public view returns (uint256) {
-        return prize[_ws];
-    }
-
-    function getLength() external view returns (uint256) {
-        return _BITPOS / 4;
-    }
-
-    function setLength(uint8 _length)
-        public
-        onlyOwner
-        isState(LotteryState.Open)
-    {
-        require(_length >= 1 && _length <= 84, "Lottery: Invalid length");
-        _BITPOS = _length * 4;
-        _BITMASK_LOTTERY_ENTRY = (1 << _BITPOS) - 1;
-        emit BitMaskChanged(_BITPOS);
-    }
-
-    function getStars() external view returns (address[] memory) {
-        return stars.values();
-    }
-
-    function getLotterisByAddress(address star)
+    function getWinning(uint256 ticketNo)
         external
         view
-        returns (uint256[] memory)
+        returns (
+            address,
+            uint8,
+            uint256
+        )
     {
-        return tickets[star].numbers;
+        return (
+            number2Winning[ticketNo].star,
+            number2Winning[ticketNo].ws,
+            number2Winning[ticketNo].prize
+        );
     }
 
-    function getWiningsByAddress(address star) external view returns (uint256) {
-        return tickets[star].winnings;
-    }
-
-    function getPrizeByAddress(address star) external view returns (uint256) {
-        return tickets[star].prize;
-    }
-
-    function getFinishedByAddress(address star) external view returns (bool) {
-        return tickets[star].finished;
+    function getPrize(address star) external view returns (uint256) {
+        return star2Prize[star];
     }
 
     //onlyOwner
@@ -158,15 +124,136 @@ contract Lottery is IRandomConsumer, Ownable {
                 )
             )
         );
-        tickets[_star].numbers.push(lot);
+        numberOfTickets = numberOfTickets.add(1);
+
+        tickets[_star].push(lot);
         stars.add(_star);
 
         emit NewEntry(_star, lot);
         return lot;
     }
 
+    function _prize(uint256 _winningNum) private {
+        // bits 1
+        for (uint256 e = 0; e < stars.length(); e++) {
+            address star = stars.at(e);
+            uint256[] memory ts = tickets[star];
+            for (uint256 t = 0; t < ts.length; t++) {
+                uint256 mLot = ts[t];
+                uint256 wLot = _winningNum;
+                uint8 bits = _BITPOS;
+                uint8 ws = 0;
+                while (bits > 0) {
+                    uint256 ml = mLot & _BITPOS_LOTTERY_ENTRY;
+                    uint wl = wLot & _BITPOS_LOTTERY_ENTRY;
+                    if (ml == wl) {
+                        ws = ws + 1;
+                    }
+                    mLot = mLot >> 4;
+                    wLot = wLot >> 4;
+                    bits = bits - 4;
+                }
+                number2Winning[ts[t]] = Winning(star, ws, 0);
+                if (ws > 0) {
+                    prize2Tickets[ws].push(Ticket(ts[t], star));
+                }
+            }
+        }
+    }
+
+    function _payout(uint256 _balance) private {
+        uint8 length = _BITPOS / 4;
+        for (uint8 pi = length; pi > 0; pi--) {
+            uint256 p_len = prize2Tickets[pi].length;
+            if (p_len > 0 && proportions[pi] > 0) {
+                uint256 prize = _balance.mul(proportions[pi]).div(1 ether);
+                if (prize > 0) {
+                    _balance = _balance.sub(prize);
+                    uint256 p = prize.div(p_len);
+                    for (uint256 index = 0; index < p_len; index++) {
+                        Ticket memory ticket = prize2Tickets[pi][index];
+                        address star = ticket.star;
+                        payable(star).transfer(p);
+                        uint256 number = ticket.number;
+                        emit Prize(star, pi, p, number);
+                        number2Winning[number].prize = p;
+                        star2Prize[star] = star2Prize[star].add(p);
+                    }
+                }
+            }
+        }
+        if (_balance > 0 && numberOfTickets > 0) {
+            uint _left = _balance.div(numberOfTickets);
+            for (uint256 index = 0; index < stars.length(); index++) {
+                address star = stars.at(index);
+                uint256 t_len = tickets[star].length;
+                uint256 p = _left.mul(t_len);
+                payable(star).transfer(p);
+                emit Prize(star, 0, p, t_len);
+                star2Prize[star] = star2Prize[star].add(p);
+            }
+        }
+    }
+
+    function _payoutPrize(uint256 _winningNum) private {
+        uint256 balance = address(this).balance;
+        if (balance > 0) {
+            _prize(_winningNum);
+            _payout(balance);
+        }
+    }
+
+    function setRandomNumberGenerator(address _randomNumberGenerator)
+        external
+        onlyOwner
+    {
+        require(
+            _randomNumberGenerator != address(0),
+            "Lottery: Invalid generator"
+        );
+        randomNumberGenerator = _randomNumberGenerator;
+        emit NumberGeneratorChanged(randomNumberGenerator);
+    }
+
+    function setProportion(uint8 _luckyNumbers, uint256 _proportion)
+        public
+        onlyOwner
+        isState(LotteryState.Open)
+    {
+        require(_luckyNumbers > 0, "Lottery: Invalid lucky numbers");
+        require(_proportion <= 1 ether, "Lottery: Invalid proportion");
+        proportions[_luckyNumbers] = _proportion;
+    }
+
+    function getProportion(uint8 _ws) public view returns (uint256) {
+        return proportions[_ws];
+    }
+
+    function getLength() external view returns (uint256) {
+        return _BITPOS / 4;
+    }
+
+    function setLength(uint8 _length)
+        public
+        onlyOwner
+        isState(LotteryState.Open)
+    {
+        require(_length >= 1 && _length <= 84, "Lottery: Invalid length");
+        _BITPOS = _length * 4;
+        // _BITMASK_LOTTERY_ENTRY = (1 << _BITPOS) - 1;
+        emit BitMaskChanged(_BITPOS);
+    }
+
+    function getStars() external view returns (address[] memory) {
+        return stars.values();
+    }
+
+    function getTickets(address star) external view returns (uint256[] memory) {
+        return tickets[star];
+    }
+
     function draw() external onlyOwner isState(LotteryState.Open) {
-        require(stars.length() > 0, "Lottery: Nobody holds a lottery");
+        require(stars.length() > 0, "Lottery: Nobody holds a ticket");
         require(address(this).balance > 0, "Lottery: Insufficient balance");
         _changeState(LotteryState.Closed);
         randomNumberRequestId = RandomNumberGenerator(randomNumberGenerator)
@@ -190,91 +277,13 @@ contract Lottery is IRandomConsumer, Ownable {
         }
     }
 
-    function _calWinnings(uint256 _winningNum, uint256 _len) private {
-        // bits 1
-        for (uint256 e = 0; e < _len; e++) {
-            address star = stars.at(e);
-            Ticket memory entry = tickets[star];
-            entry.winnings = 0;
-            entry.prize = 0;
-            for (uint256 n = 0; n < entry.numbers.length; n++) {
-                uint256 mLot = (entry.numbers[n] & _BITMASK_LOTTERY_ENTRY);
-                uint256 wLot = (_winningNum & _BITMASK_LOTTERY_ENTRY);
-                uint8 bits = _BITPOS;
-                while (bits > 0) {
-                    uint256 ml = mLot & _BITPOS_LOTTERY_ENTRY;
-                    uint wl = wLot & _BITPOS_LOTTERY_ENTRY;
-                    if (ml == wl) {
-                        entry.winnings = entry.winnings + 1;
-                    }
-                    mLot = mLot >> 4;
-                    wLot = wLot >> 4;
-                    bits = bits - 4;
-                }
-                tickets[star] = entry;
-            }
-        }
-    }
-
-    function _calPrize(uint256 _balance, uint256 _len) private {
-        uint256 bigPrize = _balance;
-        // prize
-        for (uint256 index = 0; index < _len && _balance > 0; index++) {
-            address star = stars.at(index);
-            Ticket memory entry = tickets[star];
-            uint256 _prize = 0;
-            uint8 bits = entry.winnings;
-            if (bits > 0 && prize[bits] > 0) {
-                _prize = bigPrize.mul(prize[bits]).div(1 ether);
-                if (_prize > 0) {
-                    entry.prize = _prize;
-                    tickets[star] = entry;
-                    _balance = _balance.sub(_prize);
-                }
-            }
-        }
-        if (_balance > 0) {
-            // left balance
-            uint _left = _balance.div(_len);
-            for (uint256 index = 0; index < _len; index++) {
-                Ticket memory entry = tickets[stars.at(index)];
-                entry.prize = entry.prize.add(_left);
-                tickets[stars.at(index)] = entry;
-            }
-        }
-    }
-
-    function _payout(uint256 _len) private {
-        // payout
-        for (uint256 index = 0; index < _len; index++) {
-            address star = stars.at(index);
-            Ticket memory entry = tickets[star];
-            if (entry.prize > 0 && !entry.finished) {
-                uint256 _prize = entry.prize;
-                // entry.prize = 0;
-                entry.finished = true;
-                tickets[star] = entry;
-                payable(star).transfer(_prize);
-                emit Prize(star, _prize);
-            }
-        }
-    }
-
-    function _payoutPrize(uint256 _winningNum) private {
-        uint256 len = stars.length();
-        _calWinnings(_winningNum, len);
-        uint256 balance = address(this).balance;
-        if (balance > 0) {
-            _calPrize(balance, len);
-            _payout(len);
-        }
-    }
-
     function _changeState(LotteryState _newState) private {
         state = _newState;
         emit LotteryStateChanged(state);
     }
 
     // Function to receive Ether. msg.data must be empty
-    receive() external payable {}
+    receive() external payable isState(LotteryState.Open) {
+        emit Received(msg.sender, msg.value);
+    }
 }

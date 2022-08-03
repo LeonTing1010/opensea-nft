@@ -25,7 +25,7 @@ describe("Lottery", function () {
     // Ether amount to send
     let proportion = "0.5";
     await Lottery.setProportion(0, ethers.utils.parseEther(proportion), gas);
-    console.log("Proportion of Bonus is " + (await Lottery.getProportion(1)));
+    console.log("Proportion of Prize is " + (await Lottery.getProportion(1)));
     // Create a transaction object
     let tx = {
       to: Lottery.address,

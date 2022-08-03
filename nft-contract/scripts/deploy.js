@@ -133,20 +133,22 @@ task("transfer", "Transfer ownership")
 // });
 
 // https://vrf.chain.link/ mumbai
-task("deploy-welfare", "Deploys the WelfareFoctory.sol").setAction(async function (taskArguments, hre) {
-  const WelfareFoctoryContractFactory = await hre.ethers.getContractFactory("WelfareFoctory", getAccount());
+task("deploy-welfare", "Deploys the WelfareFactory.sol").setAction(async function (taskArguments, hre) {
+  const WelfareFactoryContractFactory = await hre.ethers.getContractFactory("WelfareFactory", getAccount());
   const arguments = [getEnvVariable("SUB_ID"), getEnvVariable("VRF"), getEnvVariable("KEY_HASH")];
-  const welfareFoctory = await WelfareFoctoryContractFactory.deploy(arguments[0], arguments[1], arguments[2], { gasLimit: 5_000_000 });
-  console.log(`WelfareFoctoryContract deployed to address: ${welfareFoctory.address}`);
-  await welfareFoctory.deployed();
-  await hre.run("verify:verify", {
-    address: welfareFoctory,
-    constructorArguments: [getEnvVariable("SUB_ID"), getEnvVariable("VRF"), getEnvVariable("KEY_HASH")],
+  const welfareFactory = await WelfareFactoryContractFactory.deploy(arguments[0], arguments[1], arguments[2], {
+    gasLimit: 5_000_000,
   });
+  const welfare = await welfareFactory.deployed();
+  console.log(`WelfareFactoryContract deployed to address: ${welfare.address} ` + arguments);
+  // await hre.run("verify:verify", {
+  //   address: welfare.address,
+  //   constructorArguments: [getEnvVariable("SUB_ID"), getEnvVariable("VRF"), getEnvVariable("KEY_HASH")],
+  // });
 });
-task("verify-welfare", "Verify the WelfareFoctory.sol").setAction(async function (taskArguments, hre) {
+task("verify-welfare", "Verify the WelfareFactory.sol").setAction(async function (taskArguments, hre) {
   await hre.run("verify:verify", {
-    address: getEnvVariable("WELFAREFOCTORY_CONTRACT_ADDRESS"),
+    address: getEnvVariable("WELFAREFACTORY_CONTRACT_ADDRESS"),
     constructorArguments: [getEnvVariable("SUB_ID"), getEnvVariable("VRF"), getEnvVariable("KEY_HASH")],
   });
 });

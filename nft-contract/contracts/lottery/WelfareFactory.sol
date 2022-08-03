@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
-import "@openzeppelin/contracts/access/Ownable.sol";
-
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./Lottery.sol";
 
-contract WelfareFoctory is Ownable {
+contract WelfareFactory is AccessControl {
+    bytes32 public constant FACTORY_ROLE = keccak256("FACTORY_ROLE");
     mapping(uint256 => address) phases;
     uint64 subId;
     address vrfCoordinator;
@@ -21,9 +21,15 @@ contract WelfareFoctory is Ownable {
         subId = _subscriptionId;
         vrfCoordinator = _vrfCoordinator;
         keyHash = _keyHash;
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setupRole(FACTORY_ROLE, msg.sender);
     }
 
-    function newLottery(uint8 _length) external onlyOwner returns (address) {
+    function newLottery(uint8 _length)
+        external
+        onlyRole(FACTORY_ROLE)
+        returns (address)
+    {
         phase = phase + 1;
         Lottery lottery = new Lottery(phase, subId, vrfCoordinator, keyHash);
         if (lottery.getLength() != _length) {
@@ -37,5 +43,13 @@ contract WelfareFoctory is Ownable {
 
     function getLottery(uint256 _phase) external view returns (address) {
         return phases[_phase];
+    }
+
+    function transferRoleAdmin(address newDefaultAdmin)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        require(newDefaultAdmin != address(0), "Invalid address");
+        _setupRole(DEFAULT_ADMIN_ROLE, newDefaultAdmin);
     }
 }
