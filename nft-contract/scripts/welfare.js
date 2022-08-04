@@ -11,20 +11,47 @@ task("newLottery", "New a  Lottery")
     const factory = getEnvVariable(ContractKey);
     const contract = await getContract(factory, ContractName, hre);
     console.log(`WelfareFactoryContract address=> ${factory}`);
-    const lotteryTx = await contract.newLottery(taskArguments.l, {
-      gasLimit: 5_000_000,
-    });
+    const lotteryTx = await contract.newLottery(taskArguments.l);
     await lotteryTx.wait();
     const phase = await contract.phase();
     console.log("Phase of Lottery=> " + phase);
     const lottery = await contract.getLottery(phase);
     console.log("New Lottery=> " + lottery);
     const contractLottery = await getContract(lottery, "Lottery", hre);
-    console.log("Consumer=> " + (await contractLottery.randomNumberGenerator()));
+    const consumer = await contractLottery.randomNumberGenerator();
+    console.log("Consumer=> " + consumer);
     // await hre.run("verify:verify", {
     //   address: contractLottery.address,
     //   constructorArguments: [phase, arguments[0], arguments[1], arguments[2]],
     // });
+    const generatorContract = await getContract(getEnvVariable("GENERATOR_CONTRACT_ADDRESS"), "RandomNumberGenerator", hre);
+    await contractLottery.setRandomNumberGenerator(generatorContract.address, { gasLimit: 5_000_000 });
+    await generatorContract.subscribe({ gasLimit: 5_000_000 });
+    const tos = await generatorContract.transferOwnership(lottery, { gasLimit: 5_000_000 });
+    console.log("Transfer Ownership of RandomNumberGenerator=>" + tos.hash);
+    console.log("Consumer=> " + (await contractLottery.randomNumberGenerator()));
+  });
+task("subscribeLottery", "subscribe the  Lottery")
+  .addParam("phase", "The phase of lottery")
+  .setAction(async function (taskArguments, hre) {
+    let arguments = [getEnvVariable("SUB_ID"), getEnvVariable("VRF"), getEnvVariable("KEY_HASH")];
+    const phase = taskArguments.phase;
+    console.log("Phase of Lottery=> " + phase);
+    const factory = getEnvVariable(ContractKey);
+    const contract = await getContract(factory, ContractName, hre);
+    const lottery = await contract.getLottery(phase);
+    console.log("New Lottery=> " + lottery);
+    const contractLottery = await getContract(lottery, "Lottery", hre);
+    const generatorContract = await getContract(getEnvVariable("GENERATOR_CONTRACT_ADDRESS"), "RandomNumberGenerator", hre);
+    const rng = await contractLottery.setRandomNumberGenerator(generatorContract.address, { gasLimit: 5_000_000 });
+    await rng.wait();
+    const consumer = await contractLottery.randomNumberGenerator();
+    console.log("Consumer=> " + consumer);
+    const sub = await generatorContract.subscribe({ gasLimit: 5_000_000 });
+    await sub.wait();
+    const tos = await generator.transferOwnership(lottery, { gasLimit: 5_000_000 });
+    await tos.wait();
+    console.log("Transfer Ownership of RandomNumberGenerator=>" + tos.hash);
   });
 task("verifyLottery", "Verify the  Lottery")
   .addParam("phase", "The phase of lottery")
@@ -33,6 +60,10 @@ task("verifyLottery", "Verify the  Lottery")
     const factory = getEnvVariable(ContractKey);
     const contract = await getContract(factory, ContractName, hre);
     console.log(`WelfareFactoryContract address=> ${factory}`);
+    // await hre.run("verify:verify", {
+    //   address: factory,
+    //   constructorArguments: [arguments[0], arguments[1], arguments[2]],
+    // });
     // const lotteryTx = await contract.newLottery(taskArguments.l, {
     //   gasLimit: 5_000_000,
     //   gasPrice: 100_000_000_000,
@@ -49,6 +80,11 @@ task("verifyLottery", "Verify the  Lottery")
       address: lottery,
       constructorArguments: [phase, arguments[0], arguments[1], arguments[2]],
     });
+    const generator = await getContract(getEnvVariable("GENERATOR_CONTRACT_ADDRESS"), "RandomNumberGenerator", hre);
+    await contractLottery.setRandomNumberGenerator(generator.address);
+    await generator.subscribe();
+    const tos = await generator.transferOwnership(lottery);
+    console.log("Transfer Ownership of RandomNumberGenerator=>" + lottery);
   });
 task("grantLottery", "Grant Lottery")
   .addParam("phase", "The phase of lottery")

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.7;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./Lottery.sol";
+import "./RandomNumberGenerator.sol";
 
 contract WelfareFactory is AccessControl {
     bytes32 public constant FACTORY_ROLE = keccak256("FACTORY_ROLE");
@@ -12,6 +13,7 @@ contract WelfareFactory is AccessControl {
     uint256 public phase;
 
     event NewLottery(address lottery);
+    event NewGenerator(address lottery, address gernerator);
 
     constructor(
         uint64 _subscriptionId,
@@ -31,13 +33,22 @@ contract WelfareFactory is AccessControl {
         returns (address)
     {
         phase = phase + 1;
-        Lottery lottery = new Lottery(phase, subId, vrfCoordinator, keyHash);
+        Lottery lottery = new Lottery(phase);
         if (lottery.getLength() != _length) {
             lottery.setLength(_length);
         }
-        lottery.transferOwnership(msg.sender);
-        phases[phase] = address(lottery);
         emit NewLottery(address(lottery));
+        phases[phase] = address(lottery);
+        RandomNumberGenerator rg = new RandomNumberGenerator(
+            subId,
+            vrfCoordinator,
+            keyHash
+        );
+        rg.transferOwnership(address(lottery));
+        Lottery(lottery).setRandomNumberGenerator(address(rg));
+        emit NewGenerator(address(lottery), address(rg));
+        lottery.transferOwnership(msg.sender);
+
         return address(lottery);
     }
 

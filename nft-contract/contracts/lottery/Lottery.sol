@@ -74,15 +74,15 @@ contract Lottery is IRandomConsumer, Ownable {
 
     //constructor
     constructor(
-        uint256 _phase,
-        uint64 subscriptionId,
-        address _vrfCoordinator,
-        bytes32 _keyHash
+        uint256 _phase // uint64 subscriptionId, // address _vrfCoordinator, // bytes32 _keyHash
     ) {
         phase = _phase;
-        randomNumberGenerator = address(
-            new RandomNumberGenerator(subscriptionId, _vrfCoordinator, _keyHash)
-        );
+        // RandomNumberGenerator rg = new RandomNumberGenerator(
+        //     subscriptionId,
+        //     _vrfCoordinator,
+        //     _keyHash
+        // );
+        // randomNumberGenerator = address(rg);
         _changeState(LotteryState.Open);
     }
 
@@ -108,29 +108,29 @@ contract Lottery is IRandomConsumer, Ownable {
     }
 
     //onlyOwner
-    function twist(address _star)
+    function twist(address _star, uint256 _amount)
         external
         isState(LotteryState.Open)
         onlyOwner
-        returns (uint256)
     {
-        uint256 lot = uint256(
-            keccak256(
-                abi.encodePacked(
-                    block.difficulty,
-                    block.timestamp,
-                    _star,
-                    phase
+        require(_amount > 0, "Lottery: Tickets must be greater than 0");
+        for (uint256 i = 0; i < _amount; i++) {
+            uint256 lot = uint256(
+                keccak256(
+                    abi.encodePacked(
+                        block.difficulty,
+                        block.timestamp,
+                        _star,
+                        phase,
+                        i
+                    )
                 )
-            )
-        );
-        numberOfTickets = numberOfTickets.add(1);
-
-        tickets[_star].push(lot);
+            );
+            numberOfTickets = numberOfTickets.add(1);
+            tickets[_star].push(lot);
+            emit NewEntry(_star, lot);
+        }
         stars.add(_star);
-
-        emit NewEntry(_star, lot);
-        return lot;
     }
 
     function _prize(uint256 _winningNum) private {
@@ -253,7 +253,7 @@ contract Lottery is IRandomConsumer, Ownable {
     }
 
     function draw() external onlyOwner isState(LotteryState.Open) {
-        require(stars.length() > 0, "Lottery: Nobody holds a ticket");
+        require(numberOfTickets > 0, "Lottery: Nobody holds a ticket");
         require(address(this).balance > 0, "Lottery: Insufficient balance");
         _changeState(LotteryState.Closed);
         randomNumberRequestId = RandomNumberGenerator(randomNumberGenerator)
@@ -273,8 +273,11 @@ contract Lottery is IRandomConsumer, Ownable {
             _changeState(LotteryState.Finished);
             winningNumber = _randomWords[0];
             emit NumberDrawn(_randomNumberRequestId, winningNumber);
-            _payoutPrize(winningNumber);
         }
+    }
+
+    function payout() external isState(LotteryState.Finished) {
+        _payoutPrize(winningNumber);
     }
 
     function _changeState(LotteryState _newState) private {

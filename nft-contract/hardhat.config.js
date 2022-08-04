@@ -34,7 +34,7 @@ module.exports = {
     maticmum: {
       chainId: 80001,
       // url: `https://polygon-mumbai.infura.io/v3/${INFURA_KEY}`,
-      // url: "https://rpc-mumbai.maticvigil.com",
+      //url: "https://rpc-mumbai.maticvigil.com",
       url: `https://polygon-mumbai.g.alchemy.com/v2/${ALCHEMY_KEY}`,
       accounts: [`0x${ACCOUNT_PRIVATE_KEY}`],
     },

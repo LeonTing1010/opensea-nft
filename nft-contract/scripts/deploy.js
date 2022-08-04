@@ -136,15 +136,33 @@ task("transfer", "Transfer ownership")
 task("deploy-welfare", "Deploys the WelfareFactory.sol").setAction(async function (taskArguments, hre) {
   const WelfareFactoryContractFactory = await hre.ethers.getContractFactory("WelfareFactory", getAccount());
   const arguments = [getEnvVariable("SUB_ID"), getEnvVariable("VRF"), getEnvVariable("KEY_HASH")];
-  const welfareFactory = await WelfareFactoryContractFactory.deploy(arguments[0], arguments[1], arguments[2], {
-    gasLimit: 5_000_000,
-  });
+  const welfareFactory = await WelfareFactoryContractFactory.deploy(arguments[0], arguments[1], arguments[2]);
+  // const welfareFactory = await WelfareFactoryContractFactory.deploy();
   const welfare = await welfareFactory.deployed();
   console.log(`WelfareFactoryContract deployed to address: ${welfare.address} ` + arguments);
-  // await hre.run("verify:verify", {
-  //   address: welfare.address,
-  //   constructorArguments: [getEnvVariable("SUB_ID"), getEnvVariable("VRF"), getEnvVariable("KEY_HASH")],
-  // });
+
+  await hre.run("verify:verify", {
+    address: welfare.address,
+    constructorArguments: [getEnvVariable("SUB_ID"), getEnvVariable("VRF"), getEnvVariable("KEY_HASH")],
+  });
+});
+
+task("deploy-generator", "Deploys the RandomNumberGenerator.sol").setAction(async function (taskArguments, hre) {
+  const RandomNumberGeneratorContractFactory = await hre.ethers.getContractFactory("RandomNumberGenerator", getAccount());
+  const arguments = [getEnvVariable("SUB_ID"), getEnvVariable("VRF"), getEnvVariable("KEY_HASH")];
+  const randomNumberGeneratorFactory = await RandomNumberGeneratorContractFactory.deploy(arguments[0], arguments[1], arguments[2]);
+  const randomNumberGenerator = await randomNumberGeneratorFactory.deployed();
+  console.log(`RandomNumberGeneratorContractFactory deployed to address: ${randomNumberGenerator.address} ` + arguments);
+  await hre.run("verify:verify", {
+    address: randomNumberGenerator.address,
+    constructorArguments: [getEnvVariable("SUB_ID"), getEnvVariable("VRF"), getEnvVariable("KEY_HASH")],
+  });
+});
+task("verify-generator", "Verify the RandomNumberGenerator.sol").setAction(async function (taskArguments, hre) {
+  await hre.run("verify:verify", {
+    address: getEnvVariable("GENERATOR_CONTRACT_ADDRESS"),
+    constructorArguments: [getEnvVariable("SUB_ID"), getEnvVariable("VRF"), getEnvVariable("KEY_HASH")],
+  });
 });
 task("verify-welfare", "Verify the WelfareFactory.sol").setAction(async function (taskArguments, hre) {
   await hre.run("verify:verify", {
