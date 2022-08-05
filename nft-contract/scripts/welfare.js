@@ -35,6 +35,7 @@ task("subscribeLottery", "Subscribe the  Lottery")
     const coordinatorContract = await getContract(arguments[1], "VRFCoordinatorV2Interface", hre);
     const subscription = await coordinatorContract.addConsumer(arguments[0], consumer);
     console.log("subscription =>" + JSON.stringify(subscription));
+    await contractLottery.grantLotteryRole(getEnvVariable("QUIZ_SALES_CONTRACT_ADDRESS"));
   });
 
 task("verifyLottery", "Verify the  Lottery")
@@ -62,7 +63,7 @@ task("verifyLottery", "Verify the  Lottery")
     console.log("Arguments=>" + arguments);
     await hre.run("verify:verify", {
       address: lottery,
-      constructorArguments: [phase, arguments[0], arguments[1], arguments[2]],
+      constructorArguments: [phase],
     });
   });
 task("grantLottery", "Grant Lottery")

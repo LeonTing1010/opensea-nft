@@ -2,16 +2,18 @@
 pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./IRandomConsumer.sol";
 import "./RandomNumberGenerator.sol";
 
-contract Lottery is IRandomConsumer, Ownable {
+contract Lottery is IRandomConsumer, Ownable, AccessControl {
     using Address for address;
     using SafeMath for uint256;
     using EnumerableSet for EnumerableSet.AddressSet;
+    bytes32 public constant LOTTERY_ROLE = keccak256("LOTTERY_ROLE");
     uint256 private constant _BITPOS_LOTTERY_ENTRY = (1 << 4) - 1;
     // uint256 private _BITMASK_LOTTERY_ENTRY = (1 << 28) - 1;
     uint8 private _BITPOS = 28;
@@ -84,6 +86,7 @@ contract Lottery is IRandomConsumer, Ownable {
         // );
         // randomNumberGenerator = address(rg);
         _changeState(LotteryState.Open);
+        _setupRole(LOTTERY_ROLE, msg.sender);
     }
 
     //functions
@@ -108,10 +111,14 @@ contract Lottery is IRandomConsumer, Ownable {
     }
 
     //onlyOwner
+    function grantLotteryRole(address star) external onlyOwner {
+        _grantRole(LOTTERY_ROLE, star);
+    }
+
     function twist(address _star, uint256 _amount)
         external
         isState(LotteryState.Open)
-        onlyOwner
+        onlyRole(LOTTERY_ROLE)
     {
         require(_amount > 0, "Lottery: Tickets must be greater than 0");
         for (uint256 i = 0; i < _amount; i++) {

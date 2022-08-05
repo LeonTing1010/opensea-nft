@@ -138,13 +138,13 @@ task("deploy-welfare", "Deploys the WelfareFactory.sol").setAction(async functio
   const arguments = [getEnvVariable("SUB_ID"), getEnvVariable("VRF"), getEnvVariable("KEY_HASH")];
   const welfareFactory = await WelfareFactoryContractFactory.deploy(arguments[0], arguments[1], arguments[2]);
   // const welfareFactory = await WelfareFactoryContractFactory.deploy();
-  const welfare = await welfareFactory.deployed();
-  console.log(`WelfareFactoryContract deployed to address: ${welfare.address} ` + arguments);
+  // const welfare = await welfareFactory.deployed();
+  console.log(`WelfareFactoryContract deployed to address: ${welfareFactory.address} ` + arguments);
 
-  await hre.run("verify:verify", {
-    address: welfare.address,
-    constructorArguments: [getEnvVariable("SUB_ID"), getEnvVariable("VRF"), getEnvVariable("KEY_HASH")],
-  });
+  // await hre.run("verify:verify", {
+  //   address: welfare.address,
+  //   constructorArguments: [getEnvVariable("SUB_ID"), getEnvVariable("VRF"), getEnvVariable("KEY_HASH")],
+  // });
 });
 
 task("deploy-generator", "Deploys the RandomNumberGenerator.sol").setAction(async function (taskArguments, hre) {
@@ -168,5 +168,39 @@ task("verify-welfare", "Verify the WelfareFactory.sol").setAction(async function
   await hre.run("verify:verify", {
     address: getEnvVariable("WELFAREFACTORY_CONTRACT_ADDRESS"),
     constructorArguments: [getEnvVariable("SUB_ID"), getEnvVariable("VRF"), getEnvVariable("KEY_HASH")],
+  });
+});
+
+task("deploy-quiz", "Deploys the NFTERC721A.sol & QuizCrowdsale.sol contract").setAction(async function (taskArguments, hre) {
+  const deployer = getAccount();
+  const nftContractFactory = await hre.ethers.getContractFactory("NFTERC721A", deployer);
+  const nft = await nftContractFactory.deploy({ gasLimit: 5_000_000 });
+  //0xf57b2c51ded3a29e6891aba85459d600256cf317 rinkby
+  console.log(`NFT Contract deployed to address: ${nft.address}`);
+
+  const salesContractFactory = await hre.ethers.getContractFactory("QuizCrowdsale", deployer);
+  const sales = await salesContractFactory.deploy(deployer.address, nft.address, { gasLimit: 5_000_000 });
+  console.log(`QuizCrowdsale Contract deployed to address: ${sales.address}`);
+  //npx hardhat verify 0xaD57e80ECCF6f216C0efeBad75a00eA4BB5e34F2 0x7e76e2dc706da155c30ca5c1e2c4582b8bec786e 0x605b987b6309Be6C17ec911403C88668e087a9F1
+
+  const nftAddress = nft.address;
+  const salesAddress = sales.address;
+  await nft.setAfterTransfer(salesAddress);
+  const grantRole = await nft.grantRole("0xa952726ef2588ad078edf35b066f7c7406e207cb0003bbaba8cb53eba9553e72", salesAddress, {
+    gasLimit: 5_000_000,
+  });
+  console.log(`grant Miner Role Transaction Hash: ${grantRole.hash}`);
+});
+task("verify-nft", "Verify the NFTERC721A.sol").setAction(async function (taskArguments, hre) {
+  await hre.run("verify:verify", {
+    address: getEnvVariable("NFTA_CONTRACT_ADDRESS"),
+    constructorArguments: [],
+  });
+});
+task("verify-quiz", "Verify the QuizCrowdsale.sol").setAction(async function (taskArguments, hre) {
+  const deployer = getAccount();
+  await hre.run("verify:verify", {
+    address: getEnvVariable("QUIZ_SALES_CONTRACT_ADDRESS"),
+    constructorArguments: [deployer.address, getEnvVariable("NFTA_CONTRACT_ADDRESS")],
   });
 });

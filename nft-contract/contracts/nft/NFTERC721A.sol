@@ -9,6 +9,7 @@ import "erc721a/contracts/extensions/ERC721AQueryable.sol";
 import "../eip712/NativeMetaTransaction.sol";
 import "../eip712/ContextMixin.sol";
 import "./ERC721APausable.sol";
+import "./IAfterTokenTransfer.sol";
 
 contract NFTERC721A is
     ERC721A,
@@ -27,6 +28,8 @@ contract NFTERC721A is
     string private baseTokenURI;
     string private collectionURI;
 
+    address private callback;
+
     constructor() ERC721A("Renaissance Roar", "ROAR") {
         _initializeEIP712("Renaissance Roar");
         baseTokenURI = "https://cdn.nftstar.com/roar/metadata/";
@@ -43,7 +46,7 @@ contract NFTERC721A is
     {
         require(
             _accounts.length == _quantities.length,
-            "The two arrays are not equal in length"
+            "NFTERC721A: The two arrays are not equal in length"
         );
         for (uint256 index = 0; index < _accounts.length; index++) {
             _mint(_accounts[index], _quantities[index]);
@@ -70,7 +73,7 @@ contract NFTERC721A is
     function pause() public virtual {
         require(
             hasRole(PAUSER_ROLE, _msgSender()),
-            "NFT: must have pauser role to pause"
+            "NFTERC721A: must have pauser role to pause"
         );
         _pause();
     }
@@ -87,13 +90,17 @@ contract NFTERC721A is
     function unpause() public virtual {
         require(
             hasRole(PAUSER_ROLE, _msgSender()),
-            "NFT: must have pauser role to unpause"
+            "NFTERC721A: must have pauser role to unpause"
         );
         _unpause();
     }
 
     function current() public view returns (uint256) {
         return _totalMinted();
+    }
+
+    function nextTokenId() public view returns (uint256) {
+        return _nextTokenId();
     }
 
     function _startTokenId() internal pure override returns (uint256) {
@@ -122,6 +129,11 @@ contract NFTERC721A is
         onlyRole(MINER_ROLE)
     {
         baseTokenURI = _baseTokenURI;
+    }
+
+    function setAfterTransfer(address _transfer) external onlyRole(MINER_ROLE) {
+        require(_transfer != address(0), "NFTERC721A: Invalid address");
+        callback = _transfer;
     }
 
     function transferRoleAdmin(address newDefaultAdmin)
@@ -153,6 +165,22 @@ contract NFTERC721A is
         uint256 quantity
     ) internal virtual override(ERC721A, ERC721APausable) {
         super._beforeTokenTransfers(from, to, startTokenId, quantity);
+    }
+
+    function _afterTokenTransfers(
+        address from,
+        address to,
+        uint256 startTokenId,
+        uint256 quantity
+    ) internal virtual override {
+        if (from == address(0)) {
+            IAfterTokenTransfer(callback).onTokenMinted(
+                to,
+                startTokenId,
+                quantity
+            );
+        }
+        super._afterTokenTransfers(from, to, startTokenId, quantity);
     }
 
     function _msgSenderERC721A()
