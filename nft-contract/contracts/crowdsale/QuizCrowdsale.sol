@@ -18,6 +18,7 @@ contract QuizCrowdsale is
     using SafeMath for uint256;
     using EnumerableSet for EnumerableSet.AddressSet;
     bytes32 public constant CROWD_ROLE = keccak256("CROWD_ROLE");
+    uint8 public quiz;
     address public token;
     address payable public lottery;
     bool public opening; // airdrop opening status
@@ -33,7 +34,6 @@ contract QuizCrowdsale is
         uint256 start;
         uint256 amount;
         uint8 option;
-        uint256[] tokenIds;
     }
 
     event PubSaleStarted(bool opening);
@@ -57,7 +57,7 @@ contract QuizCrowdsale is
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(CROWD_ROLE, msg.sender);
         collector = _collector;
-        setNft(_nft);
+        token = _nft;
     }
 
     function mint(uint256 _amount, uint8 _quiz) external payable {
@@ -76,10 +76,12 @@ contract QuizCrowdsale is
             "QuizCrowdsale: Exceeded the total amount of mining"
         );
         _asyncTransfer(collector, msg.value);
+        if (_quiz > quiz) {
+            quiz = _quiz;
+        }
         address star = msg.sender;
         uint256 startTokenId = NFTERC721A(token).nextTokenId();
-        uint256[] memory ts;
-        quizzes[star].push(Quiz(startTokenId, _amount, _quiz, ts));
+        quizzes[star].push(Quiz(startTokenId, _amount, _quiz));
         stars.add(star);
         NFTERC721A(token).mint(star, _amount);
     }
@@ -87,30 +89,41 @@ contract QuizCrowdsale is
     function setNft(address _nft) public onlyRole(CROWD_ROLE) {
         require(_nft != address(0), "QuizCrowdsale: Invalid address");
         token = _nft;
+        NFTERC721A(token).setAfterTransfer(address(this));
         // token.setApprovalForAll(msg.sender, true);
     }
 
     function setLottery(address payable _lottery) public onlyRole(CROWD_ROLE) {
         require(_lottery != address(0), "QuizCrowdsale: Invalid address");
+        require(!opening, "QuizCrowdsale: The sale is not over yet");
         lottery = _lottery;
+        for (uint256 si = 0; si < stars.length(); si++) {
+            address star = stars.at(si);
+            delete quizzes[star];
+            stars.remove(star);
+        }
     }
 
     function setOpening(bool _opening) external onlyRole(CROWD_ROLE) {
+        require(opening != _opening);
         opening = _opening;
         emit PubSaleStarted(opening);
     }
 
     function setSalePrice(uint256 _price) external onlyRole(CROWD_ROLE) {
+        require(_price > 0);
         salePrice = _price;
         emit SalePriceChanged(salePrice);
     }
 
     function setMLimit(uint256 _mLimit) external onlyRole(CROWD_ROLE) {
+        require(_mLimit > 0);
         mLimit = _mLimit;
         emit MLimitChanged(mLimit);
     }
 
     function setSLimit(uint256 _sLimit) external onlyRole(CROWD_ROLE) {
+        require(_sLimit > 0);
         sLimit = _sLimit;
         emit SLimitChanged(sLimit);
     }
@@ -140,31 +153,25 @@ contract QuizCrowdsale is
         _setupRole(DEFAULT_ADMIN_ROLE, newDefaultAdmin);
     }
 
-    function getQuizes(address star, uint8 quiz)
-        external
-        view
-        returns (uint256[] memory tokenIds)
-    {
-        Quiz[] memory qs = quizzes[star];
-        for (uint256 index = 0; index < qs.length; index++) {
-            if (qs[index].option == quiz) {
-                tokenIds = qs[index].tokenIds;
-                break;
-            }
-        }
-        return tokenIds;
+    function getQuizes(address star) external view returns (Quiz[] memory) {
+        return quizzes[star];
     }
 
     function gift(uint256[] memory _lotteries) external onlyRole(CROWD_ROLE) {
         require(!opening, "QuizCrowdsale: The sale is not over yet");
+        require(
+            _lotteries.length == quiz + 1,
+            "QuizCrowdsale: The length is not equal to the number of quiz options"
+        );
         for (uint256 si = 0; si < stars.length(); si++) {
             address star = stars.at(si);
             Quiz[] memory qs = quizzes[star];
             for (uint256 index = 0; index < qs.length; index++) {
-                Lottery(lottery).twist(
-                    star,
-                    qs[index].amount.mul(_lotteries[qs[index].option])
-                );
+                Quiz memory _quiz = qs[index];
+                uint256 quantity = _quiz.amount.mul(_lotteries[_quiz.option]);
+                if (quantity > 0) {
+                    Lottery(lottery).twist(star, quantity);
+                }
             }
         }
     }
@@ -174,14 +181,9 @@ contract QuizCrowdsale is
         uint256 startTokenId,
         uint256 quantity
     ) external onlyToken {
-        Quiz[] storage qs = quizzes[to];
+        Quiz[] memory qs = quizzes[to];
         for (uint256 qi = 0; qi < qs.length; qi++) {
             if (qs[qi].start == startTokenId) {
-                qs[qi].amount = qs[qi].amount.add(quantity);
-                for (uint256 index = 0; index < quantity; index++) {
-                    uint256 tokenId = startTokenId.add(index);
-                    qs[qi].tokenIds.push(tokenId);
-                }
                 emit QuizMinted(to, startTokenId, quantity, qs[qi].option);
             }
         }

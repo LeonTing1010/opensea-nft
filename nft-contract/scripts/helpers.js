@@ -39,4 +39,5 @@ module.exports = {
   getAccount,
   getBurnAccount,
   getContract,
+  getContractAt,
 };

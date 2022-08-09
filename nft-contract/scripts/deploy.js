@@ -133,7 +133,7 @@ task("transfer", "Transfer ownership")
 // });
 
 // https://vrf.chain.link/ mumbai
-task("deploy-welfare", "Deploys the WelfareFactory.sol").setAction(async function (taskArguments, hre) {
+subtask("deploy-welfare", "Deploys the WelfareFactory.sol").setAction(async function (taskArguments, hre) {
   const WelfareFactoryContractFactory = await hre.ethers.getContractFactory("WelfareFactory", getAccount());
   const arguments = [getEnvVariable("SUB_ID"), getEnvVariable("VRF"), getEnvVariable("KEY_HASH")];
   const welfareFactory = await WelfareFactoryContractFactory.deploy(arguments[0], arguments[1], arguments[2]);
@@ -171,7 +171,7 @@ task("verify-welfare", "Verify the WelfareFactory.sol").setAction(async function
   });
 });
 
-task("deploy-quiz", "Deploys the NFTERC721A.sol & QuizCrowdsale.sol contract").setAction(async function (taskArguments, hre) {
+subtask("deploy-quiz", "Deploys the NFTERC721A.sol & QuizCrowdsale.sol contract").setAction(async function (taskArguments, hre) {
   const deployer = getAccount();
   const nftContractFactory = await hre.ethers.getContractFactory("NFTERC721A", deployer);
   const nft = await nftContractFactory.deploy({ gasLimit: 5_000_000 });
@@ -185,7 +185,7 @@ task("deploy-quiz", "Deploys the NFTERC721A.sol & QuizCrowdsale.sol contract").s
 
   const nftAddress = nft.address;
   const salesAddress = sales.address;
-  await nft.setAfterTransfer(salesAddress);
+  await nft.setAfterTransfer(salesAddress, { gasLimit: 5_000_000 });
   const grantRole = await nft.grantRole("0xa952726ef2588ad078edf35b066f7c7406e207cb0003bbaba8cb53eba9553e72", salesAddress, {
     gasLimit: 5_000_000,
   });

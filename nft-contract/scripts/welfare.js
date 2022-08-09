@@ -4,7 +4,7 @@ const { getContract, getAccount, getBurnAccount, getEnvVariable } = require("./h
 const ContractName = "WelfareFactory";
 const ContractKey = "WELFAREFACTORY_CONTRACT_ADDRESS";
 
-task("newLottery", "New a  Lottery")
+subtask("newLottery", "New a  Lottery")
   .addParam("l", "The length of lottery")
   .setAction(async function (taskArguments, hre) {
     let arguments = [getEnvVariable("SUB_ID"), getEnvVariable("VRF"), getEnvVariable("KEY_HASH")];
@@ -12,13 +12,13 @@ task("newLottery", "New a  Lottery")
     const contract = await getContract(factory, ContractName, hre);
     console.log(`WelfareFactoryContract address=> ${factory}`);
     const lotteryTx = await contract.newLottery(taskArguments.l);
-    // await lotteryTx.wait();
+    await lotteryTx.wait();
     const phase = await contract.phase();
     console.log("Phase of Lottery=> " + phase);
     const lottery = await contract.getLottery(phase);
     console.log("New Lottery=> " + lottery);
   });
-task("subscribeLottery", "Subscribe the  Lottery")
+subtask("subscribeLottery", "Subscribe the  Lottery")
   .addParam("phase", "The phase of lottery")
   .setAction(async function (taskArguments, hre) {
     let arguments = [getEnvVariable("SUB_ID"), getEnvVariable("VRF"), getEnvVariable("KEY_HASH")];
@@ -35,7 +35,6 @@ task("subscribeLottery", "Subscribe the  Lottery")
     const coordinatorContract = await getContract(arguments[1], "VRFCoordinatorV2Interface", hre);
     const subscription = await coordinatorContract.addConsumer(arguments[0], consumer);
     console.log("subscription =>" + JSON.stringify(subscription));
-    await contractLottery.grantLotteryRole(getEnvVariable("QUIZ_SALES_CONTRACT_ADDRESS"));
   });
 
 task("verifyLottery", "Verify the  Lottery")

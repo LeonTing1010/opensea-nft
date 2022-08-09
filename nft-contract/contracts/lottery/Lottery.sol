@@ -180,7 +180,7 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
                     for (uint256 index = 0; index < p_len; index++) {
                         Ticket memory ticket = prize2Tickets[pi][index];
                         address star = ticket.star;
-                        payable(star).transfer(p);
+                        // payable(star).transfer(p);
                         uint256 number = ticket.number;
                         emit Prize(star, pi, p, number);
                         number2Winning[number].prize = p;
@@ -195,9 +195,9 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
                 address star = stars.at(index);
                 uint256 t_len = tickets[star].length;
                 uint256 p = _left.mul(t_len);
-                payable(star).transfer(p);
                 emit Prize(star, 0, p, t_len);
                 star2Prize[star] = star2Prize[star].add(p);
+                payable(star).transfer(star2Prize[star]);
             }
         }
     }
