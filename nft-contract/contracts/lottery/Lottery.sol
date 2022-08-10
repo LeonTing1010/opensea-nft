@@ -13,6 +13,7 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
     using Address for address;
     using SafeMath for uint256;
     using EnumerableSet for EnumerableSet.AddressSet;
+    uint256 public constant MAX = 300;
     bytes32 public constant LOTTERY_ROLE = keccak256("LOTTERY_ROLE");
     uint256 private constant _BITPOS_LOTTERY_ENTRY = (1 << 4) - 1;
     // uint256 private _BITMASK_LOTTERY_ENTRY = (1 << 28) - 1;
@@ -110,6 +111,10 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
         return star2Prize[star];
     }
 
+    function left() external view returns (uint256) {
+        return MAX.sub(numberOfTickets);
+    }
+
     //onlyOwner
     function grantLotteryRole(address star) external onlyOwner {
         _grantRole(LOTTERY_ROLE, star);
@@ -121,6 +126,10 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
         onlyRole(LOTTERY_ROLE)
     {
         require(_amount > 0, "Lottery: Tickets must be greater than 0");
+        require(
+            numberOfTickets.add(_amount) <= MAX,
+            "Lottery: The number of tickets is greater than the maximum"
+        );
         for (uint256 i = 0; i < _amount; i++) {
             uint256 lot = uint256(
                 keccak256(

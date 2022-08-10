@@ -183,7 +183,7 @@ subtask("deploy-quiz", "Deploys the NFTERC721A.sol & QuizCrowdsale.sol contract"
   console.log(`QuizCrowdsale Contract deployed to address: ${sales.address}`);
   //npx hardhat verify 0xaD57e80ECCF6f216C0efeBad75a00eA4BB5e34F2 0x7e76e2dc706da155c30ca5c1e2c4582b8bec786e 0x605b987b6309Be6C17ec911403C88668e087a9F1
 
-  const nftAddress = nft.address;
+  // const nftAddress = nft.address;
   const salesAddress = sales.address;
   await nft.setAfterTransfer(salesAddress, { gasLimit: 5_000_000 });
   const grantRole = await nft.grantRole("0xa952726ef2588ad078edf35b066f7c7406e207cb0003bbaba8cb53eba9553e72", salesAddress, {

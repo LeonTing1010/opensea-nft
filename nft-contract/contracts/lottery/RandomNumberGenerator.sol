@@ -4,6 +4,7 @@ pragma solidity ^0.8.7;
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "./IRandomConsumer.sol";
 
 /**
@@ -11,6 +12,7 @@ import "./IRandomConsumer.sol";
  * @notice A contract that gets random values from Chainlink VRF V2
  */
 contract RandomNumberGenerator is VRFConsumerBaseV2, Ownable {
+    using EnumerableSet for EnumerableSet.AddressSet;
     VRFCoordinatorV2Interface immutable COORDINATOR;
 
     // Your subscription ID.
@@ -36,10 +38,21 @@ contract RandomNumberGenerator is VRFConsumerBaseV2, Ownable {
     // Cannot exceed VRFCoordinatorV2.MAX_NUM_WORDS.
     uint32 public num_words = 1;
 
-    uint256[] public s_randomWords;
-    uint256 public s_requestId;
+    EnumerableSet.AddressSet private whitelist;
+    mapping(uint256 => address) reqMapping;
 
-    event ReturnedRandomness(uint256[] randomWords);
+    event ReturnedRandomness(uint256 indexed requestId, uint256[] randomWords);
+
+    /**
+     * @dev Throws if called by any account other than the owner.
+     */
+    modifier onlyWhite() {
+        require(
+            whitelist.contains(_msgSender()),
+            "RandomNumberGenerator: caller is not in whitelist"
+        );
+        _;
+    }
 
     /**
      * @param _keyHash 0x4b09e658ed251bcafeebbc69400383d49f344ace09b9576fe248bb02c003fe9f
@@ -60,16 +73,21 @@ contract RandomNumberGenerator is VRFConsumerBaseV2, Ownable {
      * @notice Requests randomness
      * Assumes the subscription is funded sufficiently; "Words" refers to unit of data in Computer Science
      */
-    function requestRandomWords() external onlyOwner returns (uint256) {
+    function requestRandomWords() external onlyWhite returns (uint256) {
         // Will revert if subscription is not set and funded.
-        s_requestId = COORDINATOR.requestRandomWords(
+        uint256 _requestId = COORDINATOR.requestRandomWords(
             s_keyHash,
             s_subscriptionId,
             REQUEST_CONFIRMATIONS,
             CALLBACK_GAS_LIMIT,
             num_words
         );
-        return s_requestId;
+        reqMapping[_requestId] = _msgSender();
+        return _requestId;
+    }
+
+    function addWhitelist(address white) external onlyOwner {
+        whitelist.add(white);
     }
 
     /**
@@ -82,8 +100,11 @@ contract RandomNumberGenerator is VRFConsumerBaseV2, Ownable {
         internal
         override
     {
-        s_randomWords = randomWords;
-        IRandomConsumer(owner()).onRandomWords(requestId, s_randomWords);
-        emit ReturnedRandomness(randomWords);
+        IRandomConsumer(reqMapping[requestId]).onRandomWords(
+            requestId,
+            randomWords
+        );
+        delete reqMapping[requestId];
+        emit ReturnedRandomness(requestId, randomWords);
     }
 }
