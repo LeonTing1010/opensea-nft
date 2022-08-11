@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Pausable.sol";
 import "erc721a/contracts/ERC721A.sol";
@@ -16,6 +17,7 @@ contract NFTERC721A is
     ERC721AQueryable,
     ERC721APausable,
     AccessControl,
+    Ownable,
     ContextMixin,
     NativeMetaTransaction
 {
