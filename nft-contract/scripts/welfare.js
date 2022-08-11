@@ -11,7 +11,7 @@ subtask("newLottery", "New a  Lottery")
     const factory = getEnvVariable(ContractKey);
     const contract = await getContract(factory, ContractName, hre);
     console.log(`WelfareFactoryContract address=> ${factory}`);
-    const lotteryTx = await contract.newLottery(taskArguments.l);
+    const lotteryTx = await contract.newLottery(taskArguments.l, { gasLimit: 5_000_000 });
     await lotteryTx.wait();
     const phase = await contract.phase();
     console.log("Phase of Lottery=> " + phase);
