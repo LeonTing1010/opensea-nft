@@ -75,16 +75,9 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
     }
 
     //constructor
-    constructor(
-        uint256 _phase // uint64 subscriptionId, // address _vrfCoordinator, // bytes32 _keyHash
-    ) {
+    constructor(uint256 _phase) {
         phase = _phase;
-        // RandomNumberGenerator rg = new RandomNumberGenerator(
-        //     subscriptionId,
-        //     _vrfCoordinator,
-        //     _keyHash
-        // );
-        // randomNumberGenerator = address(rg);
+
         _changeState(LotteryState.Open);
         _setupRole(LOTTERY_ROLE, msg.sender);
     }
@@ -129,7 +122,7 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
                         block.timestamp,
                         _star,
                         phase,
-                        i
+                        numberOfTickets
                     )
                 )
             );
@@ -222,14 +215,25 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
         emit NumberGeneratorChanged(randomNumberGenerator);
     }
 
-    function setProportion(uint8 _luckyNumbers, uint256 _proportion)
-        public
-        onlyOwner
-        isState(LotteryState.Open)
-    {
-        require(_luckyNumbers > 0, "Lottery: Invalid lucky numbers");
-        require(_proportion <= 1 ether, "Lottery: Invalid proportion");
-        proportions[_luckyNumbers] = _proportion;
+    function setProportion(
+        uint8[] calldata _luckyNos,
+        uint256[] calldata _props
+    ) public onlyOwner isState(LotteryState.Open) {
+        require(
+            _luckyNos.length == _props.length,
+            "Lottery: The two arrays have different lengths"
+        );
+        require(
+            _luckyNos.length == this.getLength(),
+            "Lottery: Lucky numbers have inconsistent lengths"
+        );
+        uint256 sum;
+        for (uint256 i = 0; i < _props.length; i++) {
+            require(_luckyNos[i] > 0, "Lottery: Invalid lucky numbers");
+            sum = sum + _props[i];
+            require(sum <= 1 ether, "Lottery: Invalid proportion");
+            proportions[_luckyNos[i]] = _props[i];
+        }
     }
 
     function getProportion(uint8 _ws) public view returns (uint256) {
