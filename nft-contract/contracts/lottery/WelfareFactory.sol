@@ -12,8 +12,7 @@ contract WelfareFactory is AccessControl {
     bytes32 keyHash;
     uint256 public phase;
 
-    event NewLottery(address lottery);
-    event NewGenerator(address lottery, address gernerator);
+    event NewLottery(address lottery, address gernerator);
 
     constructor(
         uint64 _subscriptionId,
@@ -37,7 +36,6 @@ contract WelfareFactory is AccessControl {
         if (lottery.getLength() != _length) {
             lottery.setLength(_length);
         }
-        emit NewLottery(address(lottery));
         phases[phase] = address(lottery);
         RandomNumberGenerator rg = new RandomNumberGenerator(
             subId,
@@ -46,8 +44,25 @@ contract WelfareFactory is AccessControl {
         );
         rg.transferOwnership(address(lottery));
         Lottery(lottery).setRandomNumberGenerator(address(rg));
-        emit NewGenerator(address(lottery), address(rg));
         lottery.transferOwnership(msg.sender);
+        emit NewLottery(address(lottery), address(rg));
+
+        return address(lottery);
+    }
+
+    function newLotteryWithoutRNG(uint8 _length)
+        external
+        onlyRole(FACTORY_ROLE)
+        returns (address)
+    {
+        phase = phase + 1;
+        Lottery lottery = new Lottery(phase);
+        if (lottery.getLength() != _length) {
+            lottery.setLength(_length);
+        }
+        phases[phase] = address(lottery);
+        lottery.transferOwnership(msg.sender);
+        emit NewLottery(address(lottery), address(0));
 
         return address(lottery);
     }

@@ -203,6 +203,28 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
         }
     }
 
+    function payout(address[] calldata _stars, uint256[] calldata _prizes)
+        external
+        payable
+        onlyOwner
+        isState(LotteryState.Finished)
+    {
+        require(
+            _stars.length == _prizes.length,
+            "Lottery: The two arrays have different lengths"
+        );
+        uint256 balance = address(this).balance;
+        for (uint256 index = 0; index < _stars.length && balance > 0; index++) {
+            address star = _stars[index];
+            uint256 prize = _prizes[index];
+            require(stars.contains(star), "Lottery: Invalid star");
+            (bool suc, uint256 sub) = balance.trySub(prize);
+            require(suc, "Lottery: Insufficient balance");
+            balance = sub;
+            payable(star).transfer(prize);
+        }
+    }
+
     function setRandomNumberGenerator(address _randomNumberGenerator)
         external
         onlyOwner

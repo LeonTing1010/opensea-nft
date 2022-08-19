@@ -133,12 +133,12 @@ task("transfer", "Transfer ownership")
 // });
 
 // https://vrf.chain.link/ mumbai
-subtask("deploy-welfare", "Deploys the WelfareFactory.sol").setAction(async function (taskArguments, hre) {
+task("deploy-welfare", "Deploys the WelfareFactory.sol").setAction(async function (taskArguments, hre) {
   const WelfareFactoryContractFactory = await hre.ethers.getContractFactory("WelfareFactory", getAccount());
   const arguments = [getEnvVariable("SUB_ID"), getEnvVariable("VRF"), getEnvVariable("KEY_HASH")];
   const welfareFactory = await WelfareFactoryContractFactory.deploy(arguments[0], arguments[1], arguments[2]);
   // const welfareFactory = await WelfareFactoryContractFactory.deploy();
-  // const welfare = await welfareFactory.deployed();
+  const welfare = await welfareFactory.deployed();
   console.log(`WelfareFactoryContract deployed to address: ${welfareFactory.address} ` + arguments);
 
   // await hre.run("verify:verify", {
