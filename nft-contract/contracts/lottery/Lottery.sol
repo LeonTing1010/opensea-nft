@@ -109,7 +109,7 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
     }
 
     function twist(address _star, uint256 _amount)
-        external
+        public
         isState(LotteryState.Open)
         onlyRole(LOTTERY_ROLE)
     {
@@ -131,6 +131,20 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
             emit NewEntry(_star, lot);
         }
         stars.add(_star);
+    }
+
+    function batchTwist(address[] calldata _stars, uint256[] calldata _amounts)
+        external
+        isState(LotteryState.Open)
+        onlyRole(LOTTERY_ROLE)
+    {
+        require(
+            _stars.length == _amounts.length,
+            "Lottery: The two arrays have different lengths"
+        );
+        for (uint256 index = 0; index < _stars.length; index++) {
+            twist(_stars[index], _amounts[index]);
+        }
     }
 
     function _prize(uint256 _winningNum) private {
