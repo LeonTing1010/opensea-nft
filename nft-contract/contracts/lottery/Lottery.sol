@@ -218,7 +218,7 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
     function setProportion(
         uint8[] calldata _luckyNos,
         uint256[] calldata _props
-    ) public onlyOwner isState(LotteryState.Open) {
+    ) external onlyOwner isState(LotteryState.Open) {
         require(
             _luckyNos.length == _props.length,
             "Lottery: The two arrays have different lengths"
@@ -236,7 +236,7 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
         }
     }
 
-    function getProportion(uint8 _ws) public view returns (uint256) {
+    function getProportion(uint8 _ws) external view returns (uint256) {
         return proportions[_ws];
     }
 
@@ -245,7 +245,7 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
     }
 
     function setLength(uint8 _length)
-        public
+        external
         onlyOwner
         isState(LotteryState.Open)
     {
@@ -279,7 +279,7 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
     function onRandomWords(
         uint256 _randomNumberRequestId,
         uint256[] memory _randomWords
-    ) public override onlyRandomGenerator isState(LotteryState.Closed) {
+    ) external override onlyRandomGenerator isState(LotteryState.Closed) {
         if (_randomNumberRequestId == randomNumberRequestId) {
             _changeState(LotteryState.Finished);
             winningNumber = _randomWords[0];
@@ -299,5 +299,14 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
     // Function to receive Ether. msg.data must be empty
     receive() external payable isState(LotteryState.Open) {
         emit Received(msg.sender, msg.value);
+    }
+
+    function transferRNG(address payable lottery)
+        external
+        onlyOwner
+        isState(LotteryState.Finished)
+    {
+        RandomNumberGenerator(randomNumberGenerator).transferOwnership(lottery);
+        Lottery(lottery).setRandomNumberGenerator(randomNumberGenerator);
     }
 }
