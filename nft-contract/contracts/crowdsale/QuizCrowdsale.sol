@@ -28,6 +28,7 @@ contract QuizCrowdsale is
     address public collector;
     uint256 public mAmount;
     mapping(address => Quiz[]) quizzes;
+    uint256 totalTickets;
     EnumerableSet.AddressSet private stars;
 
     struct Quiz {
@@ -45,8 +46,11 @@ contract QuizCrowdsale is
         address indexed to,
         uint256 startTokenId,
         uint256 quantity,
-        uint8 quiz
+        uint8 quiz,
+        address lottery
     );
+    event LotteryChanged(address lottery, address newLottery);
+    event GiftSent(address star, uint256 amount, address lottery);
 
     modifier onlyToken() {
         require(token == msg.sender, "QuizCrowdsale: caller is not the token");
@@ -94,11 +98,16 @@ contract QuizCrowdsale is
     }
 
     function setLottery(address payable _lottery) public onlyRole(CROWD_ROLE) {
-        require(_lottery != address(0), "QuizCrowdsale: Invalid address");
+        require(
+            _lottery != address(0) && lottery != _lottery,
+            "QuizCrowdsale: Invalid address"
+        );
         require(!opening, "QuizCrowdsale: The sale is not over yet");
+        emit LotteryChanged(lottery, _lottery);
         lottery = _lottery;
-        for (uint256 si = 0; si < stars.length(); si++) {
-            address star = stars.at(si);
+        address[] memory _stars = stars.values();
+        for (uint256 si = 0; si < _stars.length; si++) {
+            address star = _stars[si];
             delete quizzes[star];
             stars.remove(star);
         }
@@ -157,6 +166,10 @@ contract QuizCrowdsale is
         return quizzes[star];
     }
 
+    function total() external view returns (uint256, uint256) {
+        return (stars.length(), totalTickets);
+    }
+
     function gift(uint256[] memory _lotteries) external onlyRole(CROWD_ROLE) {
         require(!opening, "QuizCrowdsale: The sale is not over yet");
         require(
@@ -166,14 +179,40 @@ contract QuizCrowdsale is
         for (uint256 si = 0; si < stars.length(); si++) {
             address star = stars.at(si);
             Quiz[] memory qs = quizzes[star];
+            uint256 amount;
             for (uint256 index = 0; index < qs.length; index++) {
                 Quiz memory _quiz = qs[index];
                 uint256 quantity = _quiz.amount.mul(_lotteries[_quiz.option]);
                 if (quantity > 0) {
-                    Lottery(lottery).twist(star, quantity);
+                    amount = amount.add(quantity);
                 }
             }
+            if (amount > 0) {
+                totalTickets = totalTickets.add(amount);
+                Lottery(lottery).twist(star, amount);
+                emit GiftSent(star, amount, lottery);
+            }
         }
+    }
+
+    function batchGift(address[] calldata _stars, uint256[] calldata _tickets)
+        external
+        onlyRole(CROWD_ROLE)
+    {
+        require(!opening, "QuizCrowdsale: The sale is not over yet");
+        require(
+            _stars.length == _tickets.length,
+            "QuizCrowdsale: The two arrays have different lengths"
+        );
+        for (uint256 si = 0; si < _stars.length; si++) {
+            address star = _stars[si];
+            require(stars.contains(star), "QuizCrowdsale: Invalid address");
+            uint256 ts = _tickets[si];
+            require(ts > 0, "QuizCrowdsale: Invalid tickets");
+            totalTickets = totalTickets.add(ts);
+            emit GiftSent(star, ts, lottery);
+        }
+        Lottery(lottery).batchTwist(_stars, _tickets);
     }
 
     function onTokenMinted(
@@ -184,7 +223,13 @@ contract QuizCrowdsale is
         Quiz[] memory qs = quizzes[to];
         for (uint256 qi = 0; qi < qs.length; qi++) {
             if (qs[qi].start == startTokenId) {
-                emit QuizMinted(to, startTokenId, quantity, qs[qi].option);
+                emit QuizMinted(
+                    to,
+                    startTokenId,
+                    quantity,
+                    qs[qi].option,
+                    lottery
+                );
             }
         }
     }

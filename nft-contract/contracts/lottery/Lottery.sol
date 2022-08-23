@@ -47,8 +47,8 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
     uint256 public phase;
 
     event LotteryStateChanged(LotteryState newState);
-    event NumberGeneratorChanged(address generator);
-    event NewEntry(address indexed player, uint256 number);
+    event NumberGeneratorChanged(address oldGenerator, address newGenerator);
+    event NewEntry(address indexed player, uint256 number, uint256 phase);
     event NumberRequested(uint256 requestId);
     event NumberDrawn(uint256 requestId, uint256 winningNumber);
     event BitMaskChanged(uint8 bits);
@@ -128,7 +128,7 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
             );
             numberOfTickets = numberOfTickets.add(1);
             tickets[_star].push(lot);
-            emit NewEntry(_star, lot);
+            emit NewEntry(_star, lot, phase);
         }
         stars.add(_star);
     }
@@ -247,8 +247,11 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
             _randomNumberGenerator != address(0),
             "Lottery: Invalid generator"
         );
+        emit NumberGeneratorChanged(
+            randomNumberGenerator,
+            _randomNumberGenerator
+        );
         randomNumberGenerator = _randomNumberGenerator;
-        emit NumberGeneratorChanged(randomNumberGenerator);
     }
 
     function setProportion(
