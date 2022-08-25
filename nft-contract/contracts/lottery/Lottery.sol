@@ -239,20 +239,20 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
         }
     }
 
-    function setRandomNumberGenerator(address _randomNumberGenerator)
-        external
-        onlyOwner
-    {
-        require(
-            _randomNumberGenerator != address(0),
-            "Lottery: Invalid generator"
-        );
-        emit NumberGeneratorChanged(
-            randomNumberGenerator,
-            _randomNumberGenerator
-        );
-        randomNumberGenerator = _randomNumberGenerator;
-    }
+    // function setRandomNumberGenerator(address _randomNumberGenerator)
+    //     external
+    //     onlyRole(LOTTERY_ROLE)
+    // {
+    //     require(
+    //         _randomNumberGenerator != address(0),
+    //         "Lottery: Invalid generator"
+    //     );
+    //     emit NumberGeneratorChanged(
+    //         randomNumberGenerator,
+    //         _randomNumberGenerator
+    //     );
+    //     randomNumberGenerator = _randomNumberGenerator;
+    // }
 
     function setProportion(
         uint8[] calldata _luckyNos,
@@ -342,10 +342,9 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
 
     function transferRNG(address payable lottery)
         external
-        onlyOwner
+        onlyRole(LOTTERY_ROLE)
         isState(LotteryState.Finished)
     {
         RandomNumberGenerator(randomNumberGenerator).transferOwnership(lottery);
-        Lottery(lottery).setRandomNumberGenerator(randomNumberGenerator);
     }
 }

@@ -50,7 +50,7 @@ contract WelfareFactory is AccessControl {
         return address(lottery);
     }
 
-    function newLotteryWithoutRNG(uint8 _length)
+    function newLotteryWithRNG(uint8 _length, address payable _lottery)
         external
         onlyRole(FACTORY_ROLE)
         returns (address)
@@ -60,9 +60,12 @@ contract WelfareFactory is AccessControl {
         if (lottery.getLength() != _length) {
             lottery.setLength(_length);
         }
+        Lottery(_lottery).transferRNG(payable(lottery));
+        address rng = Lottery(_lottery).randomNumberGenerator();
+        lottery.setRandomNumberGenerator(rng);
         phases[phase] = address(lottery);
         lottery.transferOwnership(msg.sender);
-        emit NewLottery(address(lottery), address(0));
+        emit NewLottery(address(lottery), rng);
 
         return address(lottery);
     }
