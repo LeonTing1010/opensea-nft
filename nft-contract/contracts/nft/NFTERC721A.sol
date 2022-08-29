@@ -58,6 +58,12 @@ contract NFTERC721A is
         _safeMint(to, quantity);
     }
 
+    function burn(uint256[] calldata tokenIds) external {
+        for (uint256 index = 0; index < tokenIds.length; index++) {
+            burn(tokenIds[index]);
+        }
+    }
+
     /**
      * @dev Pauses all token transfers.
      *
