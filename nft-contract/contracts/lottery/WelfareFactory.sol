@@ -12,7 +12,7 @@ contract WelfareFactory is AccessControl {
     bytes32 keyHash;
     uint256 public phase;
 
-    event NewLottery(address lottery, address gernerator);
+    event NewLottery(uint256 phase, address lottery, address gernerator);
 
     constructor(
         uint64 _subscriptionId,
@@ -26,16 +26,13 @@ contract WelfareFactory is AccessControl {
         _setupRole(FACTORY_ROLE, msg.sender);
     }
 
-    function newLottery(uint8 _length)
+    function newLottery(uint8 _prizes)
         external
         onlyRole(FACTORY_ROLE)
         returns (address)
     {
         phase = phase + 1;
-        Lottery lottery = new Lottery(phase);
-        if (lottery.getLength() != _length) {
-            lottery.setLength(_length);
-        }
+        Lottery lottery = new Lottery(phase, _prizes);
         phases[phase] = address(lottery);
         RandomNumberGenerator rg = new RandomNumberGenerator(
             subId,
@@ -45,27 +42,22 @@ contract WelfareFactory is AccessControl {
         rg.transferOwnership(address(lottery));
         Lottery(lottery).setRandomNumberGenerator(address(rg));
         lottery.transferOwnership(msg.sender);
-        emit NewLottery(address(lottery), address(rg));
+        emit NewLottery(phase, address(lottery), address(rg));
 
         return address(lottery);
     }
 
-    function newLotteryWithRNG(uint8 _length, address payable _lottery)
+    function newLotteryWithRNG(uint8 _prizes, address payable _lottery)
         external
         onlyRole(FACTORY_ROLE)
         returns (address)
     {
         phase = phase + 1;
-        Lottery lottery = new Lottery(phase);
-        if (lottery.getLength() != _length) {
-            lottery.setLength(_length);
-        }
+        Lottery lottery = new Lottery(phase, _prizes);
         Lottery(_lottery).transferRNG(payable(lottery));
-        address rng = Lottery(_lottery).randomNumberGenerator();
-        lottery.setRandomNumberGenerator(rng);
         phases[phase] = address(lottery);
         lottery.transferOwnership(msg.sender);
-        emit NewLottery(address(lottery), rng);
+        emit NewLottery(phase, address(lottery), Lottery(_lottery).rng());
 
         return address(lottery);
     }

@@ -34,7 +34,7 @@ contract RandomNumberGenerator is VRFConsumerBaseV2, Ownable {
 
     // For this example, retrieve 1 random values in one request.
     // Cannot exceed VRFCoordinatorV2.MAX_NUM_WORDS.
-    uint32 public num_words = 1;
+    uint32 public num_words = 100;
 
     uint256[] public s_randomWords;
     uint256 public s_requestId;

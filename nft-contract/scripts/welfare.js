@@ -30,7 +30,7 @@ subtask("subscribeLottery", "Subscribe the  Lottery")
     const lottery = await contract.getLottery(phase);
     console.log("Lottery=> " + lottery);
     const contractLottery = await getContract(lottery, "Lottery", hre);
-    const consumer = await contractLottery.randomNumberGenerator();
+    const consumer = await contractLottery.rng();
     console.log("Consumer=> " + consumer);
     const coordinatorContract = await getContract(arguments[1], "VRFCoordinatorV2Interface", hre);
     const subscription = await coordinatorContract.addConsumer(arguments[0], consumer);
@@ -58,7 +58,7 @@ task("verifyLottery", "Verify the  Lottery")
     const lottery = await contract.getLottery(phase);
     console.log("New Lottery=> " + lottery);
     const contractLottery = await getContract(lottery, "Lottery", hre);
-    console.log("Consumer=> " + (await contractLottery.randomNumberGenerator()));
+    console.log("Consumer=> " + (await contractLottery.rng()));
     console.log("Arguments=>" + arguments);
     await hre.run("verify:verify", {
       address: lottery,
@@ -82,7 +82,7 @@ task("grantLottery", "Grant Lottery")
     const lottery = await contract.getLottery(phase);
     console.log("Lottery=> " + lottery);
     const contractLottery = await getContract(lottery, "Lottery", hre);
-    console.log("Consumer=> " + (await contractLottery.randomNumberGenerator()));
+    console.log("Consumer=> " + (await contractLottery.rng()));
     console.log("grantRole=> " + (await contractLottery.grantRole("0xdfbefbf47cfe66b701d8cfdbce1de81c821590819cb07e71cb01b6602fb0ee27", taskArguments.role, { gasLimit: 5_000_000 })).hash);
     // await hre.run("verify:verify", {
     //   address: contractLottery.address,
@@ -99,7 +99,7 @@ task("getLottery", "Get Lottery")
     const lottery = await contract.getLottery(phase);
     console.log("Lottery=> " + lottery);
     const contractLottery = await getContract(lottery, "Lottery", hre);
-    console.log("Consumer=> " + (await contractLottery.randomNumberGenerator()));
+    console.log("Consumer=> " + (await contractLottery.rng()));
   });
 
 task("twistLottery", "Get Lottery")
@@ -112,7 +112,7 @@ task("twistLottery", "Get Lottery")
     const lottery = await contract.getLottery(phase);
     console.log("Lottery=> " + lottery);
     const contractLottery = await getContract(lottery, "Lottery", hre);
-    console.log("Consumer=> " + (await contractLottery.randomNumberGenerator()));
+    console.log("Consumer=> " + (await contractLottery.rng()));
     const player1 = getAccount();
     console.log("twist one=> " + (await contractLottery.twist(player1.address)).hash);
     // console.log("twist one=> " + (await contractLottery.twist(player1.address)).hash);

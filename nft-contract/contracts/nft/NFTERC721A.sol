@@ -9,7 +9,6 @@ import "erc721a/contracts/extensions/ERC721AQueryable.sol";
 import "../eip712/NativeMetaTransaction.sol";
 import "../eip712/ContextMixin.sol";
 import "./ERC721APausable.sol";
-import "./IAfterTokenTransfer.sol";
 
 contract NFTERC721A is
     ERC721A,
@@ -27,8 +26,6 @@ contract NFTERC721A is
     /// @dev Base token URI used as a prefix by tokenURI().
     string private baseTokenURI;
     string private collectionURI;
-
-    address private callback;
 
     constructor() ERC721A("Renaissance Roar", "ROAR") {
         _initializeEIP712("Renaissance Roar");
@@ -131,11 +128,6 @@ contract NFTERC721A is
         baseTokenURI = _baseTokenURI;
     }
 
-    function setAfterTransfer(address _transfer) external onlyRole(MINER_ROLE) {
-        require(_transfer != address(0), "NFTERC721A: Invalid address");
-        callback = _transfer;
-    }
-
     function transferRoleAdmin(address newDefaultAdmin)
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
@@ -165,22 +157,6 @@ contract NFTERC721A is
         uint256 quantity
     ) internal virtual override(ERC721A, ERC721APausable) {
         super._beforeTokenTransfers(from, to, startTokenId, quantity);
-    }
-
-    function _afterTokenTransfers(
-        address from,
-        address to,
-        uint256 startTokenId,
-        uint256 quantity
-    ) internal virtual override {
-        if (from == address(0)) {
-            IAfterTokenTransfer(callback).onTokenMinted(
-                to,
-                startTokenId,
-                quantity
-            );
-        }
-        super._afterTokenTransfers(from, to, startTokenId, quantity);
     }
 
     function _msgSenderERC721A()

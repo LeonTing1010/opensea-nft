@@ -11,8 +11,8 @@ task("deploy-quizcrowdsale", "deploy QuizCrowdsale").setAction(async (taskArgs, 
 task("verify-quizcrowdsale", "deploy QuizCrowdsale")
   .addParam("phase", "Phase of Lottery")
   .setAction(async (taskArgs, hre) => {
-    // await hre.run("verify-quiz");
-    // await hre.run("verify-welfare");
+    await hre.run("verify-quiz");
+    await hre.run("verify-welfare");
     await hre.run("verifyLottery", { phase: taskArgs.phase });
   });
 task("init-quiz", "init QuizCrowdsale")
