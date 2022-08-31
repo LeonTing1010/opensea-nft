@@ -26,13 +26,13 @@ contract WelfareFactory is AccessControl {
         _setupRole(FACTORY_ROLE, msg.sender);
     }
 
-    function newLottery(uint8 _prizes)
+    function newLottery(uint256 _limit)
         external
         onlyRole(FACTORY_ROLE)
         returns (address)
     {
         phase = phase + 1;
-        Lottery lottery = new Lottery(phase, _prizes);
+        Lottery lottery = new Lottery(phase, _limit);
         phases[phase] = address(lottery);
         RandomNumberGenerator rg = new RandomNumberGenerator(
             subId,
@@ -47,14 +47,15 @@ contract WelfareFactory is AccessControl {
         return address(lottery);
     }
 
-    function newLotteryWithRNG(uint8 _prizes, address payable _lottery)
+    function newLotteryWithRNG(uint256 _limit, address _lottery)
         external
         onlyRole(FACTORY_ROLE)
         returns (address)
     {
         phase = phase + 1;
-        Lottery lottery = new Lottery(phase, _prizes);
-        Lottery(_lottery).transferRNG(payable(lottery));
+        Lottery lottery = new Lottery(phase, _limit);
+        lottery.grantLotteryRole(_lottery);
+        Lottery(_lottery).transferRNG(address(lottery));
         phases[phase] = address(lottery);
         lottery.transferOwnership(msg.sender);
         emit NewLottery(phase, address(lottery), Lottery(_lottery).rng());

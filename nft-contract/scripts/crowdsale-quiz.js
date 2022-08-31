@@ -13,7 +13,7 @@ task("verify-quizcrowdsale", "deploy QuizCrowdsale")
   .setAction(async (taskArgs, hre) => {
     await hre.run("verify-quiz");
     await hre.run("verify-welfare");
-    await hre.run("verifyLottery", { phase: taskArgs.phase });
+    await hre.run("verify-lottery", { phase: taskArgs.phase, limit: 7 });
   });
 task("init-quiz", "init QuizCrowdsale")
   .addParam("phase", "Phase of Lottery")

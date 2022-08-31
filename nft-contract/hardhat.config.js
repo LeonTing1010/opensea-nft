@@ -48,6 +48,10 @@ module.exports = {
         browserURL: "https://rinkeby.etherscan.io",
       },
     },
+    goerli: {
+      url: `https://goerli.infura.io/v3/${INFURA_KEY}`,
+      accounts: [`0x${ACCOUNT_PRIVATE_KEY}`],
+    },
     maas: {
       chainId: 1088,
       url: `http://124.70.219.113:8545`,
