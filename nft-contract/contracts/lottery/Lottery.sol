@@ -136,15 +136,6 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
         return ws;
     }
 
-    function _testSetWinningNumbers(uint256[] calldata _wns)
-        external
-        onlyRole(LOTTERY_ROLE)
-        isState(LotteryState.Open)
-    {
-        _changeState(LotteryState.Finished);
-        winningNumbers = _wns;
-    }
-
     function winning()
         external
         onlyRole(LOTTERY_ROLE)
@@ -168,29 +159,6 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
                     loc = loc.add(1);
                 }
             }
-        }
-    }
-
-    function payout(address[] calldata _stars, uint256[] calldata _prizes)
-        external
-        payable
-        onlyOwner
-        isState(LotteryState.Finished)
-    {
-        require(
-            _stars.length == _prizes.length,
-            "Lottery: The two arrays have different lengths"
-        );
-        uint256 balance = msg.value;
-        for (uint256 index = 0; index < _stars.length && balance > 0; index++) {
-            address star = _stars[index];
-            uint256 _prize = _prizes[index];
-            require(stars.contains(star), "Lottery: Invalid star");
-            (bool suc, uint256 sub) = balance.trySub(_prize);
-            require(suc, "Lottery: Insufficient balance");
-            balance = sub;
-            payable(star).transfer(_prize);
-            emit PrizeReceived(star, _prize);
         }
     }
 
