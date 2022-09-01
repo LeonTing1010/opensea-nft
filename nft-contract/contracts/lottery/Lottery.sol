@@ -31,16 +31,16 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
         uint8 loc;
     }
     Prizes[] cps;
-    Winner[] ws;
+    // Winner[] ws;
     uint256 public numberOfTickets;
     EnumerableSet.AddressSet private stars;
     mapping(address => uint256[]) tickets;
     mapping(uint256 => address) ticket2stars;
-    mapping(uint256 => Winner) wners; // ticket->winner
+    mapping(uint256 => Winner) wners; // ticket>winner
 
     LotteryState public state;
     uint256 public immutable limit;
-    uint256 phase;
+    uint256 public immutable phase;
 
     uint256[] public winningNumbers;
     uint256 private randomNumberRequestId;
@@ -133,6 +133,26 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
     }
 
     function winners() external view returns (Winner[] memory) {
+        uint256 wc = 0;
+        for (uint256 index = 0; index < cps.length; index++) {
+            wc = wc.add(cps[index].count);
+        }
+        uint256 wi = 0;
+        Winner[] memory ws = new Winner[](wc);
+        bool[] memory sets = new bool[](limit);
+        for (
+            uint256 index = 0;
+            index < winningNumbers.length && wi < wc;
+            index++
+        ) {
+            uint256 wn = winningNumbers[index];
+
+            if (wners[wn].loc > 0 && !sets[wn]) {
+                sets[wn] = true;
+                ws[wi] = wners[wn];
+                wi = wi.add(1);
+            }
+        }
         return ws;
     }
 
@@ -153,7 +173,7 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
                             ticket2stars[wn],
                             uint8(pi + 1)
                         );
-                        ws.push(wners[wn]);
+                        // ws.push(wners[wn]);
                         break;
                     }
                     loc = loc.add(1);

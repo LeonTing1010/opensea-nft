@@ -116,10 +116,10 @@ task("twistLottery", "Get Lottery")
     const contractLottery = await getContract(lottery, "Lottery", hre);
     console.log("Consumer=> " + (await contractLottery.rng()));
     const player1 = getAccount();
-    console.log("twist one=> " + (await contractLottery.twist(player1.address, 3, 1, gas)).hash);
+    console.log("twist one=> " + (await contractLottery.twist(player1.address, 10, 1, gas)).hash);
     // console.log("twist one=> " + (await contractLottery.twist(player1.address)).hash);
     const player2 = getBurnAccount();
-    console.log("twist two=> " + (await contractLottery.twist(player2.address, 4, 2, gas)).hash);
+    console.log("twist two=> " + (await contractLottery.twist(player2.address, 10, 2, gas)).hash);
     // console.log("twist two=> " + (await contractLottery.twist(player2.address)).hash);
   });
 task("transferToLottery", "Transfer ethers to Lottery")
@@ -213,13 +213,13 @@ task("setWinnings", "setWinnings Tickets")
     console.log(`WelfareFactoryContract address=> ${factory}`);
     const phase = taskArguments.phase;
     const lottery = await contract.getLottery(phase);
-    console.log("Lottery=> " + lottery);
+    console.log("setWinnings=> " + lottery);
     const contractLottery = await getContract(lottery, "Lottery", hre);
-    await contractLottery.setWinnings([1, 2, 3], [3000000000, 2000000000, 1000000000], gas);
-    await contractLottery._testSetWinningNumbers([3, 4, 5, 6, 3, 3, 3, 3, 3], gas);
+    await contractLottery.setWinnings([1, 2, 3, 4], [4000000000, 3000000000, 2000000000, 1000000000], gas);
+    await contractLottery._testSetWinningNumbers([13, 14, 5, 16, 13, 13, 3, 3, 13, 1, 21, 0, 7, 8, 8, 9, 10, 11], gas);
     await contractLottery.winning(gas);
     console.log("Winners=> " + (await contractLottery.winners()));
-    for (var i = 0; i < 10; i++) {
+    for (var i = 0; i < 20; i++) {
       console.log(i + " Winer=> " + (await contractLottery.getWinner(i)));
     }
   });
@@ -241,7 +241,7 @@ task("payout-lottery", "payout prize")
 task("test-welfare", "Test Welfare")
   .addParam("phase", "Phase of Lottery")
   .setAction(async (taskArgs, hre) => {
-    await hre.run("newLottery", { limit: "7" });
+    await hre.run("newLottery", { limit: "20" });
     await hre.run("grantLottery", { phase: taskArgs.phase });
     await hre.run("twistLottery", { phase: taskArgs.phase });
     await hre.run("setWinnings", { phase: taskArgs.phase });
