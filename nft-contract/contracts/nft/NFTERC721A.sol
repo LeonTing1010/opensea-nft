@@ -9,10 +9,12 @@ import "erc721a/contracts/extensions/ERC721AQueryable.sol";
 import "../eip712/NativeMetaTransaction.sol";
 import "../eip712/ContextMixin.sol";
 import "./ERC721APausable.sol";
+import "./IBatchBurnable.sol";
 
 contract NFTERC721A is
     ERC721A,
     ERC721ABurnable,
+    // IBatchBurnable,
     ERC721AQueryable,
     ERC721APausable,
     AccessControl,
@@ -58,7 +60,7 @@ contract NFTERC721A is
         _safeMint(to, quantity);
     }
 
-    function burn(uint256[] calldata tokenIds) external {
+    function batchBurn(uint256[] calldata tokenIds) external override {
         for (uint256 index = 0; index < tokenIds.length; index++) {
             burn(tokenIds[index]);
         }
