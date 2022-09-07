@@ -14,7 +14,7 @@ import "./IBatchBurnable.sol";
 contract NFTERC721A is
     ERC721A,
     ERC721ABurnable,
-    // IBatchBurnable,
+    IBatchBurnable,
     ERC721AQueryable,
     ERC721APausable,
     AccessControl,
