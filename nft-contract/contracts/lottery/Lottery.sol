@@ -39,7 +39,7 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
     mapping(uint256 => Winner) wners; // ticket>winner
 
     LotteryState public state;
-    uint256 public immutable limit;
+
     uint256 public immutable phase;
 
     uint256[] public winningNumbers;
@@ -67,15 +67,25 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
     }
 
     //constructor
-    constructor(uint256 _phase, uint256 _limit) {
-        require(_limit > 0, "Lottery: limit must be greater than 0");
-        limit = _limit;
+    constructor(uint256 _phase) {
         phase = _phase;
         _changeState(LotteryState.Open);
         _setupRole(LOTTERY_ROLE, msg.sender);
     }
 
     //functions
+
+    function _testSetWinningNumbers(uint256[] calldata _wns)
+        external
+        onlyRole(LOTTERY_ROLE)
+        isState(LotteryState.Open)
+    {
+        _changeState(LotteryState.Finished);
+        for (uint256 index = 0; index < _wns.length; index++) {
+            winningNumbers.push(_wns[index] % numberOfTickets);
+        }
+    }
+
     //onlyOwner
     function grantLotteryRole(address star) external onlyOwner {
         _grantRole(LOTTERY_ROLE, star);
@@ -87,10 +97,6 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
         uint256 tokenId
     ) public isState(LotteryState.Open) onlyRole(LOTTERY_ROLE) {
         require(_amount > 0, "Lottery: amount must be greater than 0");
-        require(
-            numberOfTickets.add(_amount) <= limit,
-            "Lottery: The number of lottery tickets exceeds the limit"
-        );
         for (uint256 i = 0; i < _amount; i++) {
             tickets[_star].push(numberOfTickets);
             ticket2stars[numberOfTickets] = _star;
@@ -106,7 +112,7 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
 
     function setWinnings(uint8[] calldata _numbers, uint256[] calldata _prizes)
         external
-        // isState(LotteryState.Open)
+        isState(LotteryState.Open)
         onlyRole(LOTTERY_ROLE)
     {
         require(
@@ -139,7 +145,7 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
         }
         uint256 wi = 0;
         Winner[] memory ws = new Winner[](wc);
-        bool[] memory sets = new bool[](limit);
+        bool[] memory sets = new bool[](numberOfTickets);
         for (
             uint256 index = 0;
             index < winningNumbers.length && wi < wc;
@@ -219,7 +225,7 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
             _changeState(LotteryState.Finished);
             //winningNumbers = _randomWords;
             for (uint256 index = 0; index < _randomWords.length; index++) {
-                winningNumbers.push(_randomWords[index] % limit);
+                winningNumbers.push(_randomWords[index] % numberOfTickets);
             }
             emit NumberDrawn(_randomNumberRequestId, winningNumbers.length);
         }

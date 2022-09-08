@@ -11,6 +11,7 @@ contract WelfareFactory is AccessControl {
     address vrfCoordinator;
     bytes32 keyHash;
     uint256 public phase;
+    address public rng;
 
     event NewLottery(uint256 phase, address lottery, address gernerator);
 
@@ -26,39 +27,25 @@ contract WelfareFactory is AccessControl {
         _setupRole(FACTORY_ROLE, msg.sender);
     }
 
-    function newLottery(uint256 _limit)
-        external
-        onlyRole(FACTORY_ROLE)
-        returns (address)
-    {
+    function newLottery() external onlyRole(FACTORY_ROLE) returns (address) {
         phase = phase + 1;
-        Lottery lottery = new Lottery(phase, _limit);
+        Lottery lottery = new Lottery(phase);
         phases[phase] = address(lottery);
-        RandomNumberGenerator rg = new RandomNumberGenerator(
-            subId,
-            vrfCoordinator,
-            keyHash
-        );
-        rg.transferOwnership(address(lottery));
-        Lottery(lottery).setRandomNumberGenerator(address(rg));
+        if (rng == address(0)) {
+            RandomNumberGenerator rg = new RandomNumberGenerator(
+                subId,
+                vrfCoordinator,
+                keyHash
+            );
+            rng = address(rg);
+            rg.transferOwnership(address(lottery));
+            Lottery(lottery).setRandomNumberGenerator(rng);
+        } else {
+            lottery.grantLotteryRole(phases[phase - 1]);
+            Lottery(phases[phase - 1]).transferRNG(address(lottery));
+        }
         lottery.transferOwnership(msg.sender);
-        emit NewLottery(phase, address(lottery), address(rg));
-
-        return address(lottery);
-    }
-
-    function newLotteryWithRNG(uint256 _limit, address _lottery)
-        external
-        onlyRole(FACTORY_ROLE)
-        returns (address)
-    {
-        phase = phase + 1;
-        Lottery lottery = new Lottery(phase, _limit);
-        lottery.grantLotteryRole(_lottery);
-        Lottery(_lottery).transferRNG(address(lottery));
-        phases[phase] = address(lottery);
-        lottery.transferOwnership(msg.sender);
-        emit NewLottery(phase, address(lottery), Lottery(_lottery).rng());
+        emit NewLottery(phase, address(lottery), rng);
 
         return address(lottery);
     }

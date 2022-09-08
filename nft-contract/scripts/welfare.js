@@ -5,19 +5,17 @@ const ContractName = "WelfareFactory";
 const ContractKey = "WELFAREFACTORY_CONTRACT_ADDRESS";
 const gas = { gasLimit: 5_000_000 };
 
-task("newLottery", "New a  Lottery")
-  .addParam("limit", "The limit of lottery")
-  .setAction(async function (taskArguments, hre) {
-    const factory = getEnvVariable(ContractKey);
-    const contract = await getContract(factory, ContractName, hre);
-    console.log(`WelfareFactoryContract address=> ${factory}`);
-    const lotteryTx = await contract.newLottery(taskArguments.limit, gas);
-    await lotteryTx.wait();
-    const phase = await contract.phase();
-    console.log("Phase of Lottery=> " + phase);
-    const lottery = await contract.getLottery(phase);
-    console.log("New Lottery=> " + lottery);
-  });
+task("newLottery", "New a  Lottery").setAction(async function (taskArguments, hre) {
+  const factory = getEnvVariable(ContractKey);
+  const contract = await getContract(factory, ContractName, hre);
+  console.log(`WelfareFactoryContract address=> ${factory}`);
+  const lotteryTx = await contract.newLottery(gas);
+  await lotteryTx.wait();
+  const phase = await contract.phase();
+  console.log("Phase of Lottery=> " + phase);
+  const lottery = await contract.getLottery(phase);
+  console.log("New Lottery=> " + lottery);
+});
 subtask("subscribeLottery", "Subscribe the  Lottery")
   .addParam("phase", "The phase of lottery")
   .setAction(async function (taskArguments, hre) {
@@ -39,7 +37,6 @@ subtask("subscribeLottery", "Subscribe the  Lottery")
 
 task("verify-lottery", "Verify the  Lottery")
   .addParam("phase", "The phase of lottery")
-  .addParam("limit", "The limit of lottery")
   .setAction(async function (taskArguments, hre) {
     let arguments = [getEnvVariable("SUB_ID"), getEnvVariable("VRF"), getEnvVariable("KEY_HASH")];
     const factory = getEnvVariable(ContractKey);
@@ -55,7 +52,6 @@ task("verify-lottery", "Verify the  Lottery")
     // });
     // await lotteryTx.wait();
     const phase = taskArguments.phase;
-    const limit = taskArguments.limit;
     console.log("Phase of Lottery=> " + phase);
     const lottery = await contract.getLottery(phase);
     console.log("New Lottery=> " + lottery);
@@ -64,7 +60,7 @@ task("verify-lottery", "Verify the  Lottery")
     console.log("Arguments=>" + arguments);
     await hre.run("verify:verify", {
       address: lottery,
-      constructorArguments: [phase, limit],
+      constructorArguments: [phase],
     });
   });
 task("grantLottery", "Grant Lottery")
@@ -241,7 +237,7 @@ task("payout-lottery", "payout prize")
 task("test-welfare", "Test Welfare")
   .addParam("phase", "Phase of Lottery")
   .setAction(async (taskArgs, hre) => {
-    await hre.run("newLottery", { limit: "20" });
+    await hre.run("newLottery");
     await hre.run("grantLottery", { phase: taskArgs.phase });
     await hre.run("twistLottery", { phase: taskArgs.phase });
     await hre.run("setWinnings", { phase: taskArgs.phase });
