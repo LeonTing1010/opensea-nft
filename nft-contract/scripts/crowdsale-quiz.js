@@ -18,25 +18,25 @@ task("verify-quizcrowdsale", "deploy QuizCrowdsale")
 task("init-quiz", "init QuizCrowdsale")
   .addParam("phase", "Phase of Lottery")
   .setAction(async (taskArgs, hre) => {
-    await hre.run("newLottery", { l: "7" });
+    await hre.run("newLottery");
     await hre.run("subscribeLottery", { phase: taskArgs.phase });
-    await hre.run("grant-role", { phase: taskArgs.phase });
+    // await hre.run("grant-role", { phase: taskArgs.phase });
   });
 
-subtask("grant-role", "Grant QuizCrowdsale & Lottery")
-  .addParam("phase", "Phase of Lottery")
-  .setAction(async function (taskArguments, hre) {
-    const phase = taskArguments.phase;
-    console.log("Phase of Lottery=> " + phase);
-    const lottery = await (await getContract(getEnvVariable("WELFAREFACTORY_CONTRACT_ADDRESS"), "WelfareFactory", hre)).getLottery(phase);
-    console.log("Lottery=> " + lottery);
-    const contractLottery = await getContract(lottery, "Lottery", hre);
-    await contractLottery.grantLotteryRole(getEnvVariable("QUIZ_SALES_CONTRACT_ADDRESS"));
-    const contract = await getContract(getEnvVariable(ContractKey), ContractName, hre);
-    const setLottery = await contract.setLottery(contractLottery.address);
-    // const transactionResponse = await setLottery.wait();
-    console.log(`setLottery Transaction Hash: ${setLottery.hash}`);
-  });
+// subtask("grant-role", "Grant QuizCrowdsale & Lottery")
+//   .addParam("phase", "Phase of Lottery")
+//   .setAction(async function (taskArguments, hre) {
+//     const phase = taskArguments.phase;
+//     console.log("Phase of Lottery=> " + phase);
+//     const lottery = await (await getContract(getEnvVariable("WELFAREFACTORY_CONTRACT_ADDRESS"), "WelfareFactory", hre)).getLottery(phase);
+//     console.log("Lottery=> " + lottery);
+//     const contractLottery = await getContract(lottery, "Lottery", hre);
+//     await contractLottery.grantLotteryRole(getEnvVariable("QUIZ_SALES_CONTRACT_ADDRESS"));
+//     const contract = await getContract(getEnvVariable(ContractKey), ContractName, hre);
+//     const setLottery = await contract.setLottery(contractLottery.address);
+//     // const transactionResponse = await setLottery.wait();
+//     console.log(`setLottery Transaction Hash: ${setLottery.hash}`);
+//   });
 
 task("mint-quiz", "Sales the NFT")
   .addParam("amount", "Mining quantity")

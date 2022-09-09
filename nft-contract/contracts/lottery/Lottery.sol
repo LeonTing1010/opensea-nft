@@ -74,18 +74,6 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
     }
 
     //functions
-
-    function _testSetWinningNumbers(uint256[] calldata _wns)
-        external
-        onlyRole(LOTTERY_ROLE)
-        isState(LotteryState.Open)
-    {
-        _changeState(LotteryState.Finished);
-        for (uint256 index = 0; index < _wns.length; index++) {
-            winningNumbers.push(_wns[index] % numberOfTickets);
-        }
-    }
-
     //onlyOwner
     function grantLotteryRole(address star) external onlyOwner {
         _grantRole(LOTTERY_ROLE, star);
@@ -207,7 +195,7 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
 
     function draw() external onlyRole(LOTTERY_ROLE) isState(LotteryState.Open) {
         require(numberOfTickets > 0, "Lottery: Nobody holds a ticket");
-        // require(address(this).balance > 0, "Lottery: Insufficient balance");
+        require(cps.length > 0, "Lottery: Please set the number of prizes");
         _changeState(LotteryState.Closed);
         randomNumberRequestId = RandomNumberGenerator(rng).requestRandomWords();
         emit NumberRequested(randomNumberRequestId);

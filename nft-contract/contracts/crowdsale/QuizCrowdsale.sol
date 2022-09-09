@@ -3,15 +3,10 @@ pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/security/PullPayment.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "../nft/NFTERC721A.sol";
-import "../lottery/Lottery.sol";
 
 contract QuizCrowdsale is AccessControl, Ownable, ReentrancyGuard {
-    using SafeMath for uint256;
     using EnumerableSet for EnumerableSet.UintSet;
     bytes32 public constant CROWD_ROLE = keccak256("CROWD_ROLE");
     bool public opening; // airdrop opening status

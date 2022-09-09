@@ -179,14 +179,8 @@ subtask("deploy-quiz", "Deploys the NFTERC721A.sol & QuizCrowdsale.sol contract"
   console.log(`NFT Contract deployed to address: ${nft.address}`);
 
   const salesContractFactory = await hre.ethers.getContractFactory("QuizCrowdsale", deployer);
-  const sales = await salesContractFactory.deploy(deployer.address, nft.address, { gasLimit: 5_000_000 });
+  const sales = await salesContractFactory.deploy({ gasLimit: 5_000_000 });
   console.log(`QuizCrowdsale Contract deployed to address: ${sales.address}`);
-
-  const salesAddress = sales.address;
-  const grantRole = await nft.grantRole("0xa952726ef2588ad078edf35b066f7c7406e207cb0003bbaba8cb53eba9553e72", salesAddress, {
-    gasLimit: 5_000_000,
-  });
-  console.log(`grant Miner Role Transaction Hash: ${grantRole.hash}`);
 });
 task("verify-nft", "Verify the NFTERC721A.sol").setAction(async function (taskArguments, hre) {
   await hre.run("verify:verify", {
@@ -198,6 +192,6 @@ task("verify-quiz", "Verify the QuizCrowdsale.sol").setAction(async function (ta
   const deployer = getAccount();
   await hre.run("verify:verify", {
     address: getEnvVariable("QUIZ_SALES_CONTRACT_ADDRESS"),
-    constructorArguments: [deployer.address, getEnvVariable("NFTA_CONTRACT_ADDRESS")],
+    //  constructorArguments: [deployer.address, getEnvVariable("NFTA_CONTRACT_ADDRESS")],
   });
 });
