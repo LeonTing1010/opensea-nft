@@ -66,12 +66,7 @@ contract NFTFactoryERC721 is
         maxSupply = _maxSupply;
     }
 
-    function _msgSender()
-        internal
-        view
-        override(Context, NFTERC721A)
-        returns (address sender)
-    {
+    function _msgSender() internal view override returns (address sender) {
         return ContextMixin.msgSender();
     }
 }
