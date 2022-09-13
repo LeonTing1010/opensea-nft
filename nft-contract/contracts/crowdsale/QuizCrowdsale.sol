@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract QuizCrowdsale is AccessControl, Ownable, ReentrancyGuard {
+contract QuizCrowdsale is AccessControl, Ownable {
     using EnumerableSet for EnumerableSet.UintSet;
     bytes32 public constant CROWD_ROLE = keccak256("CROWD_ROLE");
     bool public opening; // airdrop opening status
@@ -40,23 +39,23 @@ contract QuizCrowdsale is AccessControl, Ownable, ReentrancyGuard {
     }
 
     function bet(
-        uint256 _tokenId,
-        uint256 _amount,
+        uint256[] calldata _tokenIds,
         uint256[] calldata _matches,
         uint8[] calldata _options
-    ) external onlyRole(CROWD_ROLE) nonReentrant {
+    ) external onlyRole(CROWD_ROLE) {
         require(opening, "QuizCrowdsale: Public sale has ended");
         require(
-            _matches.length == _options.length && _amount == _options.length,
-            "QuizCrowdsale: The number of matches&options is less than the current amount"
+            _matches.length == _options.length &&
+                _tokenIds.length == _options.length,
+            "QuizCrowdsale: Array length is inconsistent"
         );
         for (uint256 index = 0; index < _options.length; index++) {
             require(
                 !matches.contains(_matches[index]),
                 "QuizCrowdsale: The match has been banned from betting"
             );
-            quizzes[_tokenId] = Quiz(_matches[index], _options[index]);
-            emit QuizMinted(_tokenId, _matches[index], _options[index]);
+            quizzes[_tokenIds[index]] = Quiz(_matches[index], _options[index]);
+            emit QuizMinted(_tokenIds[index], _matches[index], _options[index]);
         }
     }
 

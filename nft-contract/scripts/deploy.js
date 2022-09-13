@@ -170,13 +170,12 @@ task("verify-welfare", "Verify the WelfareFactory.sol").setAction(async function
     constructorArguments: [getEnvVariable("SUB_ID"), getEnvVariable("VRF"), getEnvVariable("KEY_HASH")],
   });
 });
-
-subtask("deploy-quiz", "Deploys the NFTERC721A.sol & QuizCrowdsale.sol contract").setAction(async function (taskArguments, hre) {
+task("deploy-quiz", "Deploys the  QuizCrowdsale.sol contract").setAction(async function (taskArguments, hre) {
   const deployer = getAccount();
-  const nftContractFactory = await hre.ethers.getContractFactory("NFTERC721A", deployer);
-  const nft = await nftContractFactory.deploy({ gasLimit: 5_000_000 });
-  //0xf57b2c51ded3a29e6891aba85459d600256cf317 rinkby
-  console.log(`NFT Contract deployed to address: ${nft.address}`);
+  // const nftContractFactory = await hre.ethers.getContractFactory("NFTERC721A", deployer);
+  // const nft = await nftContractFactory.deploy({ gasLimit: 5_000_000 });
+  // //0xf57b2c51ded3a29e6891aba85459d600256cf317 rinkby
+  // console.log(`NFT Contract deployed to address: ${nft.address}`);
 
   const salesContractFactory = await hre.ethers.getContractFactory("QuizCrowdsale", deployer);
   const sales = await salesContractFactory.deploy({ gasLimit: 5_000_000 });
