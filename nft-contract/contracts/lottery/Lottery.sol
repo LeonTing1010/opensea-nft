@@ -48,7 +48,12 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
 
     event LotteryStateChanged(LotteryState newState);
     event NumberGeneratorChanged(address oldGenerator, address newGenerator);
-    event NewEntry(address indexed player, uint256 tokenId, uint256 amount);
+    event NewEntry(
+        address indexed player,
+        uint256 indexed tokenId,
+        uint256 amount,
+        uint256 lastTicketNo
+    );
     event NumberRequested(uint256 requestId);
     event NumberDrawn(uint256 requestId, uint256 winningNumber);
 
@@ -91,7 +96,7 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
             numberOfTickets = numberOfTickets.add(1);
         }
         stars.add(_star);
-        emit NewEntry(_star, tokenId, _amount);
+        emit NewEntry(_star, tokenId, _amount, numberOfTickets);
     }
 
     function getStar(uint256 _ticketNo) external view returns (address) {
