@@ -71,19 +71,6 @@ task("mint", "Sales the NFT")
     });
     console.log(`Transaction Hash: ${transactionResponse.hash}`);
   });
-// task("transfer", "Transfer ownership")
-//     .addParam("owner", "New owner")
-//     .setAction(async function (taskArguments, hre) {
-//         const contract = await getContract(getEnvVariable(contract), contractName, hre);
-//         await contract.transferOwnership(taskArguments.owner, {
-//             gasLimit: 200_000,
-//         });
-//         const transactionResponse = await contract.grantRole("0x0000000000000000000000000000000000000000000000000000000000000000",
-//          taskArguments.owner, {
-//             gasLimit: 200_000,
-//         });
-//         console.log(`Transaction Hash: ${transactionResponse.hash}`);
-//     });
 
 task("withdraw", "Withdraw Payments from the NFT contract")
   .addParam("address", "The address to to send the funds to")
@@ -91,17 +78,6 @@ task("withdraw", "Withdraw Payments from the NFT contract")
     const contract = await getContract(getEnvVariable(ContractKey), ContractName, hre);
     const transactionResponse = await contract.withdrawPayments(taskArguments.address, {
       gasLimit: 200_000,
-    });
-    console.log(`Transaction Hash: ${transactionResponse.hash}`);
-  });
-
-task("white", "Add to whitelist")
-  .addParam("address", "add to whitelist")
-  .addParam("limit", "limit to whitelist")
-  .setAction(async function (taskArguments, hre) {
-    const contract = await getContract(getEnvVariable(ContractKey), ContractName, hre);
-    const transactionResponse = await contract.grantLimits([taskArguments.address], [taskArguments.limit], {
-      gasLimit: 500_000,
     });
     console.log(`Transaction Hash: ${transactionResponse.hash}`);
   });
