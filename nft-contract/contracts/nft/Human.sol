@@ -95,7 +95,10 @@ contract Human is
         return collectionURI;
     }
 
-    function setContractURI(string memory _contractURI) public onlyOwner {
+    function setContractURI(string memory _contractURI)
+        public
+        onlyRole(MINER_ROLE)
+    {
         collectionURI = _contractURI;
     }
 
@@ -105,7 +108,10 @@ contract Human is
     }
 
     /// @dev Sets the base token URI prefix.
-    function setBaseTokenURI(string memory _baseTokenURI) public onlyOwner {
+    function setBaseTokenURI(string memory _baseTokenURI)
+        public
+        onlyRole(MINER_ROLE)
+    {
         baseTokenURI = _baseTokenURI;
     }
 
@@ -114,6 +120,10 @@ contract Human is
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         _setupRole(DEFAULT_ADMIN_ROLE, newDefaultAdmin);
+    }
+
+    function grantMinerRole(address _miner) external onlyOwner {
+        _grantRole(MINER_ROLE, _miner);
     }
 
     /**

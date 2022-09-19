@@ -1,7 +1,6 @@
 const { task } = require("hardhat/config");
 const { getContract, getEnvVariable } = require("./helpers");
 const fetch = require("node-fetch");
-const contractName = "NFTERC721A";
 
 task("mintTo", "Mints from the NFT contract")
   .addParam("address", "The address to receive a token")

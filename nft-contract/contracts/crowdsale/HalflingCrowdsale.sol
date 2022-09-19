@@ -4,20 +4,21 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/PullPayment.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "../nft/Human.sol";
+import "../nft/Halfling.sol";
 import "erc721a/contracts/extensions/ERC721AQueryable.sol";
 
-contract HumanCrowdsale is AccessControl, PullPayment, Ownable {
+contract HalflingCrowdsale is AccessControl, PullPayment, Ownable {
     using SafeMath for uint256;
     bytes32 public constant CROWD_ROLE = keccak256("CROWD_ROLE");
     address public token;
+    address public human;
+    address public potion;
     bool public allowed;
     uint256 public sLimit = 10; //single mint limit
     uint256 public mLimit = 3000; //total mining limit
     uint256 public salePrice = 0.35 ether;
     address public collector;
     uint256 public mAmount;
-    address[] prerequisites;
 
     event PubSaleStarted(bool started);
     event AllowSaleStarted(bool started);
@@ -28,29 +29,28 @@ contract HumanCrowdsale is AccessControl, PullPayment, Ownable {
     event CollectorChanged(address collector);
 
     modifier onlyTokenOwner(address sender) {
-        bool allIncluded = true;
-        for (uint256 index = 0; index < prerequisites.length; index++) {
-            uint256[] memory tokensIds = ERC721AQueryable(prerequisites[index])
-                .tokensOfOwner(msg.sender);
-            if (tokensIds.length <= 0) {
-                allIncluded = false;
-                break;
-            }
-        }
-        require(allIncluded, "HumanCrowdsale:Does not meet the pre-requisites");
+        uint256[] memory hs = ERC721AQueryable(human).tokensOfOwner(sender);
+        uint256[] memory ps = ERC721AQueryable(potion).tokensOfOwner(sender);
+
+        require(
+            ps.length > 0 && hs.length > 0,
+            "HumanCrowdsale:Mining conditions are not satisfied"
+        );
         _;
     }
 
     constructor(
         address _collector,
         address _nft,
-        address[] memory _prerequisites
+        address _human,
+        address _potion
     ) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(CROWD_ROLE, msg.sender);
         collector = _collector;
         setNft(_nft);
-        prerequisites = _prerequisites;
+        human = _human;
+        potion = _potion;
     }
 
     function mint(uint256 _amount) external payable onlyTokenOwner(msg.sender) {
@@ -70,19 +70,12 @@ contract HumanCrowdsale is AccessControl, PullPayment, Ownable {
         );
 
         _asyncTransfer(collector, msg.value);
-        Human(token).mint(msg.sender, _amount);
+        Halfling(token).mint(msg.sender, _amount);
     }
 
     function setNft(address _nft) public onlyRole(CROWD_ROLE) {
         require(_nft != address(0), "HumanCrowdsale:Invalid address");
         token = _nft;
-    }
-
-    function setPrerequisites(address[] calldata _prerequisites)
-        public
-        onlyRole(CROWD_ROLE)
-    {
-        prerequisites = _prerequisites;
     }
 
     function setAllow(bool _allow) external onlyRole(CROWD_ROLE) {

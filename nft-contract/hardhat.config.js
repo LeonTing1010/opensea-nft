@@ -4,8 +4,9 @@ require("@nomicfoundation/hardhat-toolbox");
 require("./scripts/deploy.js");
 require("./scripts/mint.js");
 require("./scripts/crowdsale.js");
-require("./scripts/welfare.js");
-require("./scripts/crowdsale-quiz.js");
+require("./scripts/neymar.js");
+// require("./scripts/welfare.js");
+// require("./scripts/crowdsale-quiz.js");
 
 // require("@nomiclabs/hardhat-etherscan");
 // require("hardhat-gas-reporter");

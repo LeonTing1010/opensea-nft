@@ -2,6 +2,7 @@
 pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "erc721a/contracts/ERC721A.sol";
 import "erc721a/contracts/extensions/ERC721ABurnable.sol";
 import "erc721a/contracts/extensions/ERC721AQueryable.sol";
@@ -17,6 +18,7 @@ contract Animal is
     ERC721AQueryable,
     ERC721APausable,
     AccessControl,
+    Ownable,
     ContextMixin,
     NativeMetaTransaction
 {
@@ -140,6 +142,10 @@ contract Animal is
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         _setupRole(DEFAULT_ADMIN_ROLE, newDefaultAdmin);
+    }
+
+    function grantMinerRole(address _miner) external onlyOwner {
+        _grantRole(MINER_ROLE, _miner);
     }
 
     /**

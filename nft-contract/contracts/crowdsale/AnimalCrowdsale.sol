@@ -23,7 +23,7 @@ contract AnimalCrowdsale is AccessControl, Ownable {
     /**
      * The caller must own the token.
      */
-    error CallerNotOwner();
+    error CallerNotOwner(address potionOwner, address halflingOwner);
 
     constructor(
         address _nft,
@@ -43,7 +43,7 @@ contract AnimalCrowdsale is AccessControl, Ownable {
         address pOwner = ERC721A(potion).ownerOf(_potionId);
         address hOwner = ERC721A(halfling).ownerOf(_halflingId);
         if (msg.sender != pOwner || msg.sender != hOwner) {
-            revert CallerNotOwner();
+            revert CallerNotOwner(pOwner, hOwner);
         }
         ERC721ABurnable(potion).burn(_potionId);
         ERC721ABurnable(halfling).burn(_halflingId);

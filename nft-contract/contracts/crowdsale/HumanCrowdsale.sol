@@ -13,7 +13,7 @@ contract HumanCrowdsale is AccessControl, PullPayment, Ownable, Signer {
     bytes32 public constant CROWD_ROLE = keccak256("CROWD_ROLE");
     address public token;
     address public teaser;
-    bool public allow;
+    bool public allowed;
     bool public white;
     bool public pub;
     uint256 public sLimit = 10; //single mint limit
@@ -47,7 +47,7 @@ contract HumanCrowdsale is AccessControl, PullPayment, Ownable, Signer {
         payable
         requiresSignature(_signature)
     {
-        require(allow, "HUMANCROWDSALE:Allow-List sale has not started");
+        require(allowed, "HUMANCROWDSALE:Allow-List sale has not started");
         require(
             _amount <= sLimit,
             "HUMANCROWDSALE:Exceeded the single purchase limit"
@@ -89,7 +89,7 @@ contract HumanCrowdsale is AccessControl, PullPayment, Ownable, Signer {
         Human(token).mint(msg.sender, _amount);
     }
 
-    function publicMint(uint256 _amount) external payable {
+    function pubMint(uint256 _amount) external payable {
         require(pub, "HUMANCROWDSALE:Public sale has not started");
         require(
             _amount <= sLimit,
@@ -119,7 +119,7 @@ contract HumanCrowdsale is AccessControl, PullPayment, Ownable, Signer {
     }
 
     function setAllow(bool _allow) external onlyRole(CROWD_ROLE) {
-        allow = _allow;
+        allowed = _allow;
         emit AllowSaleStarted(_allow);
     }
 
