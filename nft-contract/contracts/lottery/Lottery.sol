@@ -31,7 +31,6 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
         uint8 loc;
     }
     Prizes[] cps;
-    // Winner[] ws;
     uint256 public numberOfTickets;
     EnumerableSet.AddressSet private stars;
     mapping(address => uint256[]) tickets;
@@ -131,7 +130,7 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
         return (w.star, w.loc, w.prize, w.ticket);
     }
 
-    function getPrize(uint8 _loc)
+    function getPrize(uint8 _loc, uint256 _index)
         external
         view
         returns (
@@ -142,11 +141,26 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
         )
     {
         Winner[] memory ws = winners();
+        uint256 i = 0;
         for (uint256 index = 0; index < ws.length; index++) {
             Winner memory w = ws[index];
             if (w.loc == _loc) {
-                return (w.star, w.loc, w.prize, w.ticket);
+                if (_index == i) {
+                    return (w.star, w.loc, w.prize, w.ticket);
+                }
+                i = i.add(1);
             }
+        }
+    }
+
+    function getPrizes() external view returns (uint256[] memory tps) {
+        uint256 index = 0;
+        for (uint256 loc = 0; loc < winningNumbers.length; loc++) {
+            uint256 wn = winningNumbers[loc];
+            Winner memory w = wners[wn];
+            tps[index] = w.ticket;
+            tps[index + 1] = w.prize;
+            index = index.add(2);
         }
     }
 
@@ -158,12 +172,8 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
         uint256 wi = 0;
         Winner[] memory ws = new Winner[](wc);
         bool[] memory sets = new bool[](numberOfTickets);
-        for (
-            uint256 index = 0;
-            index < winningNumbers.length && wi < wc;
-            index++
-        ) {
-            uint256 wn = winningNumbers[index];
+        for (uint256 loc = 0; loc < winningNumbers.length && wi < wc; loc++) {
+            uint256 wn = winningNumbers[loc];
 
             if (wners[wn].loc > 0 && !sets[wn]) {
                 sets[wn] = true;
