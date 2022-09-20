@@ -42,10 +42,10 @@ task("verify-lottery", "Verify the  Lottery")
     const factory = getEnvVariable(ContractKey);
     const contract = await getContract(factory, ContractName, hre);
     console.log(`WelfareFactoryContract address=> ${factory}`);
-    // await hre.run("verify:verify", {
-    //   address: factory,
-    //   constructorArguments: [arguments[0], arguments[1], arguments[2]],
-    // });
+    await hre.run("verify:verify", {
+      address: factory,
+      constructorArguments: [arguments[0], arguments[1], arguments[2]],
+    });
     // const lotteryTx = await contract.newLottery(taskArguments.l, {
     //   gasLimit: 5_000_000,
     //   gasPrice: 100_000_000_000,
@@ -239,6 +239,6 @@ task("test-welfare", "Test Welfare")
   .setAction(async (taskArgs, hre) => {
     await hre.run("newLottery");
     await hre.run("grantLottery", { phase: taskArgs.phase });
-    await hre.run("twistLottery", { phase: taskArgs.phase });
-    await hre.run("setWinnings", { phase: taskArgs.phase });
+    // await hre.run("twistLottery", { phase: taskArgs.phase });
+    // await hre.run("setWinnings", { phase: taskArgs.phase });
   });

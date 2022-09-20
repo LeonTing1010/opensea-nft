@@ -131,7 +131,26 @@ contract Lottery is IRandomConsumer, Ownable, AccessControl {
         return (w.star, w.loc, w.prize, w.ticket);
     }
 
-    function winners() external view returns (Winner[] memory) {
+    function getPrize(uint8 _loc)
+        external
+        view
+        returns (
+            address star,
+            uint8 loc,
+            uint256 prize,
+            uint256 ticket
+        )
+    {
+        Winner[] memory ws = winners();
+        for (uint256 index = 0; index < ws.length; index++) {
+            Winner memory w = ws[index];
+            if (w.loc == _loc) {
+                return (w.star, w.loc, w.prize, w.ticket);
+            }
+        }
+    }
+
+    function winners() public view returns (Winner[] memory) {
         uint256 wc = 0;
         for (uint256 index = 0; index < cps.length; index++) {
             wc = wc.add(cps[index].count);
