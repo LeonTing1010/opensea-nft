@@ -219,6 +219,16 @@ task("setWinnings", "setWinnings Tickets")
       console.log(i + " Winer=> " + (await contractLottery.getWinner(i)));
     }
   });
+task("getPrizes", "lottery getPrizes")
+  .addParam("phase", "The phase of lottery")
+  .setAction(async function (taskArguments, hre) {
+    const factory = getEnvVariable(ContractKey);
+    const contract = await getContract(factory, ContractName, hre);
+    const phase = taskArguments.phase;
+    const lottery = await contract.getLottery(phase);
+    const contractLottery = await getContract(lottery, "Lottery", hre);
+    console.log("Prizes=> " + (await contractLottery.getPrizes()));
+  });
 task("payout-lottery", "payout prize")
   .addParam("phase", "The phase of lottery")
   .setAction(async function (taskArguments, hre) {
@@ -239,6 +249,7 @@ task("test-welfare", "Test Welfare")
   .setAction(async (taskArgs, hre) => {
     await hre.run("newLottery");
     await hre.run("grantLottery", { phase: taskArgs.phase });
-    // await hre.run("twistLottery", { phase: taskArgs.phase });
-    // await hre.run("setWinnings", { phase: taskArgs.phase });
+    await hre.run("twistLottery", { phase: taskArgs.phase });
+    await hre.run("setWinnings", { phase: taskArgs.phase });
+    await hre.run("getPrizes", { phase: taskArgs.phase });
   });

@@ -28,10 +28,10 @@ contract NFTERC721A is
     string private baseTokenURI;
     string private collectionURI;
 
-    constructor() ERC721A("Renaissance Roar", "ROAR") {
-        _initializeEIP712("Renaissance Roar");
-        baseTokenURI = "https://cdn.nftstar.com/roar/metadata/";
-        collectionURI = "https://cdn.nftstar.com/roar/meta-roar.json";
+    constructor() ERC721A("Collection", "CLT") {
+        _initializeEIP712("Collection Roar");
+        baseTokenURI = "https://cdn.nftstar.com/collection/metadata/";
+        collectionURI = "https://cdn.nftstar.com/collection/meta-collection.json";
         // Grant the contract deployer the default admin role: it will be able to grant and revoke any roles
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSenderERC721A());
         _setupRole(MINER_ROLE, _msgSenderERC721A());
